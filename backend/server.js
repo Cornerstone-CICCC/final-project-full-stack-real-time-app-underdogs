@@ -4,6 +4,10 @@ const http = require("http")
 const { Server } = require("socket.io")
 const session = require("express-session")
 const cookieParser = require("cookie-parser")
+
+const authRoutes = require("./src/routes/auth")
+const chatRoutes = require("./src/routes/chat")
+
 const { initSocket } = require("./src/socket")
 
 const app = express()
@@ -22,6 +26,9 @@ app.use(
     cookie: { httpOnly: true, maxAge: 1000 * 60 * 60 * 24 }, // 24 hours
   })
 )
+
+app.use("/api/auth", authRoutes)
+app.use("/api/chats", chatRoutes)
 
 initSocket(io)
 
