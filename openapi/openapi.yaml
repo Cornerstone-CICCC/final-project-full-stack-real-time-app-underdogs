@@ -1,0 +1,390 @@
+openapi: 3.0.3
+info:
+  title: SupportFlow API
+  version: 1.0.0
+  description: Customer Support Live Chat API
+
+servers:
+  - url: http://localhost:4010
+    description: Mock server (Prism)
+  - url: http://localhost:3000
+    description: Local development server (Express)
+
+tags:
+  - name: Auth
+    description: Admin authentication
+  - name: Chats
+    description: Chat session management
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: connect.sid
+
+  schemas:
+    Admin:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "1"
+        name:
+          type: string
+          example: "Alice"
+        email:
+          type: string
+          example: "alice@support.com"
+
+    Message:
+      type: object
+      properties:
+        from:
+          type: string
+          enum: [visitor, admin]
+          example: "visitor"
+        text:
+          type: string
+          example: "Hello, I need help."
+        time:
+          type: string
+          example: "14:02"
+
+    Chat:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "abc123"
+        visitorId:
+          type: string
+          example: "visitor_a3f9"
+        status:
+          type: string
+          enum: [open, closed]
+          example: "open"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-06-12T14:00:00Z"
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/Message"
+
+    ChatSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "abc123"
+        visitorId:
+          type: string
+          example: "visitor_a3f9"
+        status:
+          type: string
+          enum: [open, closed]
+          example: "open"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-06-12T14:00:00Z"
+        latestMessage:
+          type: string
+          example: "Hello, I need help."
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Unauthorized"
+
+paths:
+
+  # ──────────────────────────────────────────
+  # Auth
+  # ──────────────────────────────────────────
+
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new admin account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+              properties:
+                name:
+                  type: string
+                  example: "Alice"
+                email:
+                  type: string
+                  example: "alice@support.com"
+                password:
+                  type: string
+                  example: "SecurePassword123!"
+      responses:
+        "201":
+          description: Admin registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Registered successfully"
+        "400":
+          description: Validation error or email already taken
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Log in as admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  example: "alice@support.com"
+                password:
+                  type: string
+                  example: "SecurePassword123!"
+      responses:
+        "200":
+          description: Login successful, session cookie set
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  admin:
+                    $ref: "#/components/schemas/Admin"
+        "401":
+          description: Invalid email or password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Log out and destroy session
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Logged out successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Logged out successfully"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/auth/me:
+    get:
+      tags: [Auth]
+      summary: Get the currently logged-in admin
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Returns the logged-in admin's info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Admin"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  # ──────────────────────────────────────────
+  # Chats
+  # ──────────────────────────────────────────
+
+  /api/chats:
+    post:
+      tags: [Chats]
+      summary: Visitor starts a new chat session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [visitorId]
+              properties:
+                visitorId:
+                  type: string
+                  example: "visitor_a3f9"
+      responses:
+        "201":
+          description: Chat session created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Chat"
+
+    get:
+      tags: [Chats]
+      summary: Get all open chat sessions (admin only)
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: List of open chats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatSummary"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/chats/{id}:
+    get:
+      tags: [Chats]
+      summary: Get a single chat with full message history (admin only)
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "abc123"
+      responses:
+        "200":
+          description: Chat with full message history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Chat"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Chat not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/chats/{id}/messages:
+    post:
+      tags: [Chats]
+      summary: Send a message in a chat (visitor or admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "abc123"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [from, text]
+              properties:
+                from:
+                  type: string
+                  enum: [visitor, admin]
+                  example: "visitor"
+                text:
+                  type: string
+                  example: "Hello, I need help."
+      responses:
+        "201":
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "404":
+          description: Chat not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/chats/{id}/close:
+    patch:
+      tags: [Chats]
+      summary: Close a chat session (admin only)
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "abc123"
+      responses:
+        "200":
+          description: Chat closed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Chat closed"
+                  id:
+                    type: string
+                    example: "abc123"
+                  status:
+                    type: string
+                    example: "closed"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Chat not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
