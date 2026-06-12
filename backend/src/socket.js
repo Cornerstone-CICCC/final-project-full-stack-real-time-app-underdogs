@@ -1,3 +1,5 @@
+const chats = require("./models/chats")
+
 function initSocket(io) {
   io.on("connection", (socket) => {
     console.log("Socket connected:", socket.id)
@@ -9,12 +11,22 @@ function initSocket(io) {
 
     // Either side sends a message
     socket.on("send_message", ({ chatId, sender, text }) => {
-      // TODO: Implement message sending logic
+      const message = chats.addMessage(chatId, sender, text)
+      if (message) {
+        io.to(chatId).emit("new_message", { chatId, message })
+        // Notify admin dashboard of activity
+        io.emit("chat_updated", chats.findById(chatId))
+      }
     })
 
     // Admin closes a chat
     socket.on("close_chat", (chatId) => {
-      // TODO: Implement chat closing logic
+      const chat = chats.updateStatus(chatId, "closed")
+      if (chat) io.to(chatId).emit("chat_closed", chatId)
+    })
+
+    socket.on("disconnect", () => {
+      console.log("Socket disconnected:", socket.id)
     })
   })
 }
