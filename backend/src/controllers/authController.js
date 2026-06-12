@@ -1,4 +1,4 @@
-const users = require("../models-backup/users")
+const users = require("../models/users")
 const crypto = require("crypto")
 
 function hashPassword(password) {
