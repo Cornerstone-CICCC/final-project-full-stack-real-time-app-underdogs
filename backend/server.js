@@ -1,0 +1,29 @@
+require("dotenv").config()
+const express = require("express")
+const http = require("http")
+const { Server } = require("socket.io")
+const session = require("express-session")
+const cookieParser = require("cookie-parser")
+const { initSocket } = require("./src/socket")
+
+const app = express()
+const httpServer = http.createServer(app)
+const io = new Server(httpServer, {
+  cors: { origin: process.env.FRONTEND_URL || "http://localhost:4321", credentials: true },
+})
+
+app.use(express.json())
+app.use(cookieParser())
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "dev_secret",
+    resave: false,
+    saveUninitialized: false,
+    cookie: { httpOnly: true, maxAge: 1000 * 60 * 60 * 24 }, // 24 hours
+  })
+)
+
+initSocket(io)
+
+const PORT = process.env.PORT || 3000
+httpServer.listen(PORT, () => console.log(`Server running on port ${PORT}`))
