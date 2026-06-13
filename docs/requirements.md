@@ -37,6 +37,10 @@ Visitors can start a chat anonymously. Logged-in admins manage and reply to chat
 
 - [ ] Display a chat widget on the page
 - [ ] Generate a random session ID (e.g. `visitor_a3f9`) on first visit and store it in `localStorage`
+  - On page load, check `localStorage` for an existing `visitorId`
+  - If not found → generate a new random ID and save it to `localStorage`
+  - If found → reuse the existing ID
+  - This means the same visitor gets the same ID across page reloads (until `localStorage` is cleared)
 - [ ] Send the session ID with every Socket.io connection to identify the visitor
 - [ ] Display the visitor as **"Visitor #a3f9"** (short session ID) on the admin dashboard
 - [ ] Visitor can type and send messages
