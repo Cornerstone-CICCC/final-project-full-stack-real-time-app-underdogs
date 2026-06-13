@@ -9,6 +9,56 @@ Teams: **4-5 students**
 
 > You SHOULD consult with your instructor before choosing a project.
 
+## Getting Started
+
+### Initial Setup (first time only)
+
+Run the setup script from the project root. This installs all dependencies and copies `.env.example` files to `.env` in each directory.
+
+```bash
+./initial.sh
+```
+
+What it does:
+- `npm install` in root, `frontend/`, `backend/`, and `openapi/`
+- Copies `frontend/.env.example` → `frontend/.env`
+- Copies `frontend/.env.mock.example` → `frontend/.env.mock`
+- Copies `backend/.env.example` → `backend/.env`
+
+> Make sure to fill in `backend/.env` with your own `SESSION_SECRET` before running the app.
+
+---
+
+### Local Development
+
+Run from the **project root**:
+
+```bash
+# With real backend (normal development)
+npm run dev
+
+# Without backend — uses Prism mock server instead
+npm run dev:mock
+```
+
+| Command | Frontend | Backend | Mock server | Swagger UI |
+|---|---|---|---|---|
+| `npm run dev` | ✅ | ✅ | — | ✅ |
+| `npm run dev:mock` | ✅ | — | ✅ | ✅ |
+
+---
+
+### Port Reference
+
+| Service | Port | URL |
+|---|---|---|
+| Frontend (Astro) | 4321 | http://localhost:4321 |
+| Backend (Express) | 3000 | http://localhost:3000 |
+| Prism mock server | 4010 | http://localhost:4010 |
+| Swagger UI | 8080 | http://localhost:8080 |
+
+---
+
 ## Submission Checklist
 
 * Push your final code to GitHub.
