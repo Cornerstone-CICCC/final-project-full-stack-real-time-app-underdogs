@@ -1,9 +1,10 @@
-# Project Requirements — Customer Support Live Chat
+# Project Requirements — Stupid & Slow Pizza (Customer Support Chat)
 
 ## Overview
 
-A real-time customer support chat application.
-Visitors can start a chat anonymously. Logged-in admins manage and reply to chats from a dashboard.
+A real-time customer support chat application for **Stupid & Slow Pizza** — a pizza delivery company so bad that the only thing visitors can do on the website is open a support ticket and complain.
+
+Visitors fill in their name to open a ticket. One fixed admin account handles all incoming chats.
 
 **Tech Stack:** Astro (frontend) · Node.js + Express (backend) · Socket.io (real-time) · Tailwind CSS
 
@@ -13,8 +14,12 @@ Visitors can start a chat anonymously. Logged-in admins manage and reply to chat
 
 | User | Auth required | Description |
 |---|---|---|
-| Visitor | No | Any anonymous user who opens the chat page |
-| Admin | Yes (session cookie) | Support agent who manages chats from the dashboard |
+| Visitor | No | Anyone who wants to open a support ticket |
+| Admin | Yes (session cookie) | Single fixed admin account that handles all chats |
+
+**Default admin account (pre-seeded in server memory):**
+- Email: `admin@admin.com`
+- Password: `admin`
 
 ---
 
@@ -22,42 +27,27 @@ Visitors can start a chat anonymously. Logged-in admins manage and reply to chat
 
 | Route | Page | Access |
 |---|---|---|
-| `/` | Visitor chat page | Public |
-| `/admin/register` | Admin register | Public |
+| `/` | Home page | Public |
 | `/admin/login` | Admin login | Public |
-| `/admin/dashboard` | Admin dashboard | Protected (admin only) |
+| `/chat` | Chat page | Public (visitor) / Protected view (admin) |
 
 ---
 
 ## Feature Requirements
 
-### 1. Visitor Chat Page (`/`)
+### 1. Home Page (`/`)
 
 ![Visitor Landing Page](../assets/images/visitor_landing_page.png)
 
-- [ ] Display a chat widget on the page
-- [ ] Generate a random session ID (e.g. `visitor_a3f9`) on first visit and store it in `localStorage`
-  - On page load, check `localStorage` for an existing `visitorId`
-  - If not found → generate a new random ID and save it to `localStorage`
-  - If found → reuse the existing ID
-  - This means the same visitor gets the same ID across page reloads (until `localStorage` is cleared)
-- [ ] Send the session ID with every Socket.io connection to identify the visitor
-- [ ] Display the visitor as **"Visitor #a3f9"** (short session ID) on the admin dashboard
-- [ ] Visitor can type and send messages
-- [ ] Visitor receives admin replies in real-time
-- [ ] Show status message: "Connecting you to an agent..."
-- [ ] Show "Chat has ended" when admin closes the chat
+- [ ] Display the brand name **"Stupid & Slow Pizza"**
+- [ ] Show the headline: **"Having problems?"**
+- [ ] Show an **"Open a Ticket"** button
+  - Clicking the button opens a dialog or a new page with a form
+  - Form fields: **First Name** and **Last Name**
+  - On submit, create a new chat session and redirect to `/chat`
+- [ ] Show a small **"Admin Login"** button (subtle, not prominent)
 
-### 2. Admin Register (`/admin/register`)
-
-![Admin Register Page](../assets/images/admin_register_page.png)
-
-- [ ] Admin can create an account with name, email, and password
-- [ ] Password is hashed before being stored in server memory
-- [ ] After successful registration, redirect to `/admin/login`
-- [ ] Show an error if the email is already taken
-
-### 3. Admin Login (`/admin/login`)
+### 2. Admin Login (`/admin/login`)
 
 ![Admin Login Page](../assets/images/admin_login_page.png)
 
@@ -65,19 +55,34 @@ Visitors can start a chat anonymously. Logged-in admins manage and reply to chat
 - [ ] Session is created using a session cookie
 - [ ] Admin can log out (session is destroyed)
 - [ ] All `/admin/*` routes redirect to `/admin/login` if not authenticated
+- [ ] No registration page — only one fixed admin account exists
 
-### 4. Admin Dashboard (`/admin/dashboard`)
+### 3. Chat Page (`/chat`)
 
 ![Admin Dashboard Page](../assets/images/admin_dashboard_page.png)
 
-- [ ] Show the logged-in admin's name in the bottom-left of the sidebar (next to the logout button)
-- [ ] Show a list of active (open) chats
-  - Display: visitor ID (e.g. "Visitor #a3f9"), latest message preview, timestamp
-- [ ] Admin clicks a chat to open and read the full message history
+#### Visitor view
+- [ ] Visitor sees their own chat thread
+- [ ] Visitor can type and send messages
+- [ ] Visitor receives admin replies in real-time
+- [ ] Show status message: "Connecting you to an agent..."
+- [ ] Show **"Chat has ended"** notice when admin closes the ticket
+- [ ] Visitor **cannot** see other chats or mark a ticket as closed
+- [ ] Visitor **has no chat history** — each new session starts fresh
+
+#### Admin view (same `/chat` route, protected)
+- [ ] Admin sees a list of **all tickets** (open and closed) in a sidebar
+  - Display: visitor badge (initials), visitor full name, latest message preview, timestamp
+- [ ] Admin clicks a ticket to open and read the **full message history**
 - [ ] Admin can type and send a reply in real-time
-- [ ] Admin can close a chat (status changes from `open` → `closed`)
-- [ ] Closed chats are removed from the active queue
-- [ ] New incoming chats appear in the queue instantly (no page refresh)
+- [ ] Admin can mark a ticket as **Closed** (status: `open` → `closed`)
+- [ ] New incoming tickets appear in the list instantly (no page refresh)
+- [ ] Show the logged-in admin name at the bottom of the sidebar
+
+#### Visitor badge
+- Visitor's initials are used as a badge instead of a profile picture
+- Example: **Sarah Miller** → badge **"SM"**
+- The badge is shown in the admin's ticket list and in the chat header
 
 ---
 
@@ -103,35 +108,32 @@ Frontend  ──── REST request ──────→  Backend
 
 ### Connection Events (Client → Server, on page load)
 
-When a client first loads the page, it establishes a Socket.io connection and identifies itself so the backend knows which room to broadcast to.
-
 | Event | Sent By | Payload | Purpose |
 |---|---|---|---|
-| `visitor:join` | Visitor | `{ visitorId, chatId }` | Join the visitor's specific chat room |
+| `visitor:join` | Visitor | `{ chatId }` | Join the visitor's specific chat room |
 | `admin:join` | Admin | `{ adminId }` | Join the admin broadcast room |
 
 ---
 
 ### Push Notification Events (Server → Client)
 
-After the backend processes a REST request, it emits one of the following events to notify the relevant clients.
-
 | Event | Sent To | Trigger | Payload |
 |---|---|---|---|
-| `chat:new` | Admin dashboard | Visitor starts a new chat | `{ chatId, visitorId, createdAt }` |
+| `chat:new` | Admin | Visitor opens a new ticket | `{ chatId, visitorName, initials, createdAt }` |
 | `message:new` | Admin or Visitor | Either side sends a message | `{ chatId, from, text, time }` |
-| `chat:closed` | Visitor | Admin closes the chat | `{ chatId }` |
+| `chat:closed` | Visitor | Admin closes the ticket | `{ chatId }` |
 
 ---
 
 ## Out of Scope (Intentionally Excluded)
 
-- Landing page / marketing hero section
+- Admin registration page
+- Visitor chat history between sessions
 - Analytics page
 - Team management page
 - Canned responses
 - Broadcast feature
-- Visitor IP / location lookup (ip-api.com)
+- Visitor IP / location lookup
 - Reports section
 - Transfer chat between admins
 
@@ -140,25 +142,23 @@ After the backend processes a REST request, it emits one of the following events
 ## Optional (Add Only If Time Allows)
 
 - [ ] "Agent is typing..." indicator (Socket.io)
-- [ ] Show visitor IP address to admin as extra context (via `socket.handshake.address`)
-- [ ] Visitor location via `ip-api.com`
-- [ ] Unread message badge on admin dashboard
+- [ ] Unread message badge on admin ticket list
 
 ---
 
 ## API Endpoints
 
-See `docs/api.md` for the full API design.
+See `openapi/openapi.yaml` for the full API design.
 
 ---
 
 ## Project Priorities
 
 1. Project setup and repo structure
-2. Admin register + login + logout (session cookie auth)
+2. Admin login + logout (session cookie auth)
 3. Protected routes for `/admin/*`
-4. Visitor chat page + chat widget UI
-5. Admin dashboard UI (chat list + chat panel)
+4. Home page UI + "Open a Ticket" form
+5. Chat page UI (visitor view + admin view)
 6. Socket.io real-time messaging
 7. UI polish and responsive design
 8. Testing and presentation preparation

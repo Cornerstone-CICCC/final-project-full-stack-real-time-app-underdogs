@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
-  title: SupportFlow API
+  title: Stupid & Slow Pizza — Support Chat API
   version: 1.0.0
-  description: Customer Support Live Chat API
+  description: Customer support chat API for Stupid & Slow Pizza
 
 servers:
   - url: http://localhost:4010
@@ -30,12 +30,9 @@ components:
         id:
           type: string
           example: "1"
-        name:
-          type: string
-          example: "Alice"
         email:
           type: string
-          example: "alice@support.com"
+          example: "admin@admin.com"
 
     Message:
       type: object
@@ -46,7 +43,7 @@ components:
           example: "visitor"
         text:
           type: string
-          example: "Hello, I need help."
+          example: "My pizza is 3 hours late!"
         time:
           type: string
           example: "14:02"
@@ -57,9 +54,15 @@ components:
         id:
           type: string
           example: "abc123"
-        visitorId:
+        visitorFirstName:
           type: string
-          example: "visitor_a3f9"
+          example: "Sarah"
+        visitorLastName:
+          type: string
+          example: "Miller"
+        visitorInitials:
+          type: string
+          example: "SM"
         status:
           type: string
           enum: [open, closed]
@@ -79,9 +82,15 @@ components:
         id:
           type: string
           example: "abc123"
-        visitorId:
+        visitorFirstName:
           type: string
-          example: "visitor_a3f9"
+          example: "Sarah"
+        visitorLastName:
+          type: string
+          example: "Miller"
+        visitorInitials:
+          type: string
+          example: "SM"
         status:
           type: string
           enum: [open, closed]
@@ -92,7 +101,7 @@ components:
           example: "2026-06-12T14:00:00Z"
         latestMessage:
           type: string
-          example: "Hello, I need help."
+          example: "My pizza is 3 hours late!"
 
     Error:
       type: object
@@ -106,45 +115,6 @@ paths:
   # ──────────────────────────────────────────
   # Auth
   # ──────────────────────────────────────────
-
-  /api/auth/register:
-    post:
-      tags: [Auth]
-      summary: Register a new admin account
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [name, email, password]
-              properties:
-                name:
-                  type: string
-                  example: "Alice"
-                email:
-                  type: string
-                  example: "alice@support.com"
-                password:
-                  type: string
-                  example: "SecurePassword123!"
-      responses:
-        "201":
-          description: Admin registered successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Registered successfully"
-        "400":
-          description: Validation error or email already taken
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
 
   /api/auth/login:
     post:
@@ -160,10 +130,10 @@ paths:
               properties:
                 email:
                   type: string
-                  example: "alice@support.com"
+                  example: "admin@admin.com"
                 password:
                   type: string
-                  example: "SecurePassword123!"
+                  example: "admin"
       responses:
         "200":
           description: Login successful, session cookie set
@@ -232,18 +202,21 @@ paths:
   /api/chats:
     post:
       tags: [Chats]
-      summary: Visitor starts a new chat session
+      summary: Visitor opens a new support ticket
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [visitorId]
+              required: [firstName, lastName]
               properties:
-                visitorId:
+                firstName:
                   type: string
-                  example: "visitor_a3f9"
+                  example: "Sarah"
+                lastName:
+                  type: string
+                  example: "Miller"
       responses:
         "201":
           description: Chat session created
@@ -254,12 +227,12 @@ paths:
 
     get:
       tags: [Chats]
-      summary: Get all open chat sessions (admin only)
+      summary: Get all chat sessions (admin only)
       security:
         - cookieAuth: []
       responses:
         "200":
-          description: List of open chats
+          description: List of all chats (open and closed)
           content:
             application/json:
               schema:
@@ -331,7 +304,7 @@ paths:
                   example: "visitor"
                 text:
                   type: string
-                  example: "Hello, I need help."
+                  example: "My pizza is 3 hours late!"
       responses:
         "201":
           description: Message sent
@@ -349,7 +322,7 @@ paths:
   /api/chats/{id}/close:
     patch:
       tags: [Chats]
-      summary: Close a chat session (admin only)
+      summary: Close a support ticket (admin only)
       security:
         - cookieAuth: []
       parameters:
@@ -361,7 +334,7 @@ paths:
           example: "abc123"
       responses:
         "200":
-          description: Chat closed successfully
+          description: Ticket closed successfully
           content:
             application/json:
               schema:
@@ -369,7 +342,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: "Chat closed"
+                    example: "Ticket closed"
                   id:
                     type: string
                     example: "abc123"
