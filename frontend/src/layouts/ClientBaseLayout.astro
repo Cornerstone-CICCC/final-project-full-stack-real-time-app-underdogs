@@ -1,0 +1,22 @@
+---
+import '../styles/global.css';
+
+import ClientHeader from '../components/ClientHeader.astro';
+import ClientFooter from '../components/ClientFooter.astro';
+const { title } = Astro.props;
+---
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title} | Stupid & Slow Pizza</title>
+  </head>
+  <body class="min-h-screen bg-taupe-50 text-taupe-800 flex flex-col">
+    <ClientHeader />
+    <main class="flex-1 px-10 py-8">
+      <slot />
+    </main>
+    <ClientFooter />
+  </body>
+</html>
