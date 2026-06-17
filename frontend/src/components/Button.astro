@@ -1,0 +1,31 @@
+---
+import { LoaderCircle } from "@lucide/astro"
+
+interface Props {
+  id?: string
+  disabled?: boolean
+  type?: "button" | "submit" | "reset"
+  class?: string
+}
+
+const { id, disabled = false, type = "button", class: className = "" } = Astro.props
+---
+
+<button
+  id={id}
+  type={type}
+  disabled={disabled}
+  class:list={[
+    "relative font-inter text-sm font-semibold py-3 rounded-md transition-all",
+    "disabled:opacity-40 disabled:cursor-not-allowed",
+    "not-disabled:hover:opacity-90 not-disabled:cursor-pointer",
+    className,
+  ]}
+>
+  <span class="btn-label flex items-center justify-center">
+    <slot />
+  </span>
+  <span class="btn-spinner hidden absolute inset-0 items-center justify-center">
+    <LoaderCircle class="animate-spin h-4 w-4" />
+  </span>
+</button>
