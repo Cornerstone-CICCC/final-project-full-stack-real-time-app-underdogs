@@ -209,8 +209,11 @@ paths:
           application/json:
             schema:
               type: object
-              required: [firstName, lastName]
+              required: [visitorId, firstName, lastName]
               properties:
+                visitorId:
+                  type: string
+                  example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
                 firstName:
                   type: string
                   example: "Sarah"
@@ -219,11 +222,15 @@ paths:
                   example: "Miller"
       responses:
         "201":
-          description: Chat session created
+          description: Chat session created, returns the new chat ID
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Chat"
+                type: object
+                properties:
+                  chatId:
+                    type: string
+                    example: "abc123"
 
     get:
       tags: [Chats]

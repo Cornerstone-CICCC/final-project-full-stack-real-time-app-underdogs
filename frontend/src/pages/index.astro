@@ -1,11 +1,40 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
+import ClientBaseLayout from "@layouts/ClientBaseLayout.astro"
 ---
-<BaseLayout title="Get Support">
-  <main class="flex flex-col items-center justify-center min-h-screen gap-6">
-    <h1 class="text-3xl font-bold">Need help? Chat with us</h1>
-    <!-- Visitor chat widget will go here -->
-    <p class="text-gray-500">Chat widget coming soon</p>
-    <a href="/admin/login" class="text-sm text-blue-600 underline">Admin login</a>
-  </main>
-</BaseLayout>
+
+<ClientBaseLayout title="HOME">
+  <div class="flex items-center justify-center w-auto gap-10">
+    <div class="flex flex-col items-start justify-center gap-4 max-w-80">
+      <p class="font-inter text-sm font-bold text-amber-700 uppercase tracking-widest">
+        Wood-Fired · Neapolitan Style
+      </p>
+      <h1 class="font-barlow-condensed text-7xl font-black uppercase tracking-widest">
+        Stupid<br />
+        Good.<br />
+        Slow<br />
+        Made.
+      </h1>
+
+      <div class="font-barlow text-sm text-taupe-500 leading-relaxed">
+        <p>
+          Hand-stretched dough, San Marzano tomatoes,<br />
+          fresh buffalo mozzarella — baked in a 900°F wood-fired oven for that perfect leopard-spotted
+          char.
+        </p>
+        <div class="h-px w-full bg-black/10 my-2"></div>
+        <p>
+          Every pizza is made to order — no shortcuts, no frozen dough.<br />
+          We're slow because we care, and that's exactly how we like it.
+        </p>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-center py-2">
+      <img
+        src="https://images.unsplash.com/photo-1581873372796-635b67ca2008?w=900&h=900&fit=crop&auto=format"
+        alt="Neapolitan margherita pizza"
+        class="object-contain drop-shadow-2xl max-w-120 max-h-120 w-full"
+      />
+    </div>
+  </div>
+</ClientBaseLayout>

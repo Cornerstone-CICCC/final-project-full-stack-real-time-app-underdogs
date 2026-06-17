@@ -1,0 +1,26 @@
+---
+import Icon from "@components/Icon.astro"
+---
+
+<footer
+  class="font-inter flex items-center justify-between px-10 py-4 border-t border-amber-900/20 bg-amber-500/10"
+>
+  <div class="flex items-center gap-3">
+    <!-- Pizza icon -->
+    <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-amber-700">
+      <Icon name="Pizza" width="16" height="16" color="white" />
+    </div>
+
+    <p class="text-sm">
+      Having a problem with your order?
+      <span class="font-semibold">Our support team is here to help.</span>
+    </p>
+  </div>
+
+  <button
+    data-modal-btn
+    class="px-6 py-3 rounded-md text-white text-sm font-semibold transition-opacity hover:opacity-90 bg-amber-700 cursor-pointer"
+  >
+    Chat with us
+  </button>
+</footer>
