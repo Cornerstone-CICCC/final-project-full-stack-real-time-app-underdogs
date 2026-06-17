@@ -43,14 +43,14 @@ import Button from "@components/Button.astro"
     </div>
   </div>
 
-  <Button id="start-chat-btn" disabled class="w-full bg-amber-700 text-white"> Start chat </Button>
+  <Button id="start-chat-btn" disabled class="w-full bg-amber-700 text-white">Start chat</Button>
 </div>
 
 <script>
   import { chatModalStatus, currentChatId } from "@stores/chatModal"
   import { createChat } from "@lib/api/chat"
   import { ApiError } from "@lib/api/client"
-  import { getOrCreateVisitorId } from "@utils/localStorage"
+  import { saveVisitor } from "@utils/localStorage"
 
   const contentElement = document.getElementById("register-content") as HTMLDivElement
   const btnElement = document.getElementById("start-chat-btn") as HTMLButtonElement
@@ -84,7 +84,7 @@ import Button from "@components/Button.astro"
 
     setLoading(true)
     try {
-      const visitorId = getOrCreateVisitorId()
+      const { visitorId } = saveVisitor(firstName, lastName)
       const res = await createChat({
         visitorId,
         firstName,
