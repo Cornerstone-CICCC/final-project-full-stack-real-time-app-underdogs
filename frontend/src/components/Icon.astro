@@ -1,0 +1,12 @@
+---
+import * as Lucide from '@lucide/astro';
+
+interface Props extends Omit<Lucide.IconProps, 'iconNode'> {
+  name: string;
+}
+
+const { name, ...rest } = Astro.props
+const IconComponent = (Lucide as unknown as Record<string, Lucide.AstroComponent>)[name]
+---
+
+<IconComponent {...rest} />
