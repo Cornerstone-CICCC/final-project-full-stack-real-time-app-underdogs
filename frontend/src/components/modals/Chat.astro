@@ -54,22 +54,66 @@ import Icon from "@components/Icon.astro"
 </div>
 
 <script>
-  import { isModalOpen, chatModalStatus } from "@stores/chatModal"
+  import { chatModalStatus, currentChatId } from "@stores/chatModal"
+  import { sendMessage } from "@lib/api/chat"
+  import { ApiError } from "@lib/api/client"
 
-  const chatElement = document.getElementById("chat-content")
-  const closeBtnElement = document.getElementById("chat-close-btn")
+  const chatElement = document.getElementById("chat-content") as HTMLDivElement
+  const messagesContainer = document.getElementById("messages-container") as HTMLDivElement
+  const chatInput = document.getElementById("chat-input") as HTMLInputElement
+  const sendBtn = document.getElementById("send-btn") as HTMLButtonElement
 
   chatModalStatus.subscribe((status) => {
     if (status === "chat") {
-      chatElement?.classList.remove("hidden")
-      chatElement?.classList.add("flex")
+      chatElement.classList.remove("hidden")
+      chatElement.classList.add("flex")
     } else {
-      chatElement?.classList.remove("flex")
-      chatElement?.classList.add("hidden")
+      chatElement.classList.remove("flex")
+      chatElement.classList.add("hidden")
     }
   })
 
-  closeBtnElement?.addEventListener("click", () => {
-    isModalOpen.set(false)
+  function appendMessage(text: string, from: "visitor" | "admin") {
+    const isVisitor = from === "visitor"
+    const bubble = document.createElement("div")
+    bubble.className = `flex ${isVisitor ? "justify-end" : "justify-start"}`
+    bubble.innerHTML = `
+      <div class="max-w-[75%] px-4 py-2.5 rounded-2xl text-sm font-inter leading-relaxed ${
+        isVisitor
+          ? "bg-amber-700 text-white rounded-br-sm"
+          : "bg-white border border-gray-200 text-taupe-900 rounded-bl-sm"
+      }">
+        ${text}
+      </div>
+    `
+    messagesContainer.appendChild(bubble)
+    messagesContainer.scrollTo({ top: messagesContainer.scrollHeight, behavior: "smooth" })
+  }
+
+  async function handleSend() {
+    const text = chatInput.value.trim()
+    const chatId = currentChatId.get()
+    if (!text || !chatId) return
+
+    chatInput.value = ""
+    appendMessage(text, "visitor")
+
+    try {
+      await sendMessage({ chatId, from: "visitor", text })
+    } catch (error: unknown) {
+      if (error instanceof ApiError) {
+        console.error(`API ERROR ${error.status}:`, error.message)
+      } else {
+        console.error(error)
+      }
+    }
+  }
+
+  sendBtn.addEventListener("click", handleSend)
+  chatInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault()
+      handleSend()
+    }
   })
 </script>

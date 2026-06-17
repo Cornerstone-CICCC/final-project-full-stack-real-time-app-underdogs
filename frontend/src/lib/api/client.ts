@@ -9,8 +9,6 @@ export class ApiError extends Error {
 }
 
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  console.log("✅️ URL!!!!!", import.meta.env.PUBLIC_API_URL, "| MODE:", import.meta.env.MODE)
-
   const res = await fetch(`${import.meta.env.PUBLIC_API_URL}${path}`, init)
 
   if (!res.ok) {
