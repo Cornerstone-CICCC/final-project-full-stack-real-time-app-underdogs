@@ -1,11 +1,16 @@
 ---
-import Icon from '@components/Icon.astro';
+import Icon from "@components/Icon.astro"
 ---
 
-<div id="chat-content" class="hidden overflow-hidden rounded-2xl shadow-2xl flex-col h-3/5 min-h-120 w-full">
+<div
+  id="chat-content"
+  class="hidden overflow-hidden rounded-2xl shadow-2xl flex-col h-3/5 min-h-120 w-full"
+>
   <header class="flex items-center justify-between px-5 py-4 bg-amber-700 shrink-0">
     <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center font-inter text-sm font-bold text-white">
+      <div
+        class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center font-inter text-sm font-bold text-white"
+      >
         SA
       </div>
       <div>
@@ -25,12 +30,13 @@ import Icon from '@components/Icon.astro';
   </header>
 
   <!-- Messages -->
-  <div id="messages-container" class="flex-1 overflow-y-auto px-5 py-5 space-y-3 bg-gray-50">
-  </div>
+  <div id="messages-container" class="flex-1 overflow-y-auto px-5 py-5 space-y-3 bg-gray-50"></div>
 
   <!-- Input -->
   <div class="px-4 py-4 bg-white border-t border-black/[0.07] shrink-0">
-    <div class="flex items-center gap-2.5 rounded-xl bg-gray-50 border border-gray-200 px-4 py-2.5 focus-within:border-orange-300 focus-within:ring-2 focus-within:ring-orange-100 transition">
+    <div
+      class="flex items-center gap-2.5 rounded-xl bg-gray-50 border border-gray-200 px-4 py-2.5 focus-within:border-orange-300 focus-within:ring-2 focus-within:ring-orange-100 transition"
+    >
       <input
         id="chat-input"
         type="text"
@@ -45,26 +51,25 @@ import Icon from '@components/Icon.astro';
       </button>
     </div>
   </div>
-
 </div>
 
 <script>
-  import { isModalOpen, chatModalStatus } from '@stores/chatModal';
+  import { isModalOpen, chatModalStatus } from "@stores/chatModal"
 
-  const chatElement = document.getElementById('chat-content');
-  const closeBtnElement = document.getElementById('chat-close-btn');
+  const chatElement = document.getElementById("chat-content")
+  const closeBtnElement = document.getElementById("chat-close-btn")
 
   chatModalStatus.subscribe((status) => {
-    if (status === 'chat') {
-      chatElement?.classList.remove('hidden');
-      chatElement?.classList.add('flex');
+    if (status === "chat") {
+      chatElement?.classList.remove("hidden")
+      chatElement?.classList.add("flex")
     } else {
-      chatElement?.classList.remove('flex');
-      chatElement?.classList.add('hidden');
+      chatElement?.classList.remove("flex")
+      chatElement?.classList.add("hidden")
     }
-  });
+  })
 
-  closeBtnElement?.addEventListener('click', () => {
-    isModalOpen.set(false);
-  });
+  closeBtnElement?.addEventListener("click", () => {
+    isModalOpen.set(false)
+  })
 </script>

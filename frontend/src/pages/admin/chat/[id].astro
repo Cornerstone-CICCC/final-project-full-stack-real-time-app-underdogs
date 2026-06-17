@@ -1,7 +1,8 @@
 ---
-import BaseLayout from '../../../layouts/BaseLayout.astro';
-const { id } = Astro.params;
+import BaseLayout from "../../../layouts/BaseLayout.astro"
+const { id } = Astro.params
 ---
+
 <BaseLayout title={`Chat ${id}`}>
   <main class="p-8">
     <h1 class="text-2xl font-bold mb-6">Chat #{id}</h1>
