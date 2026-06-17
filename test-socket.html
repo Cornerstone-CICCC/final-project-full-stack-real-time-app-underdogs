@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Socket.io Tester</title>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: monospace; }
+    body { background: #1a1a2e; color: #eee; padding: 20px; }
+    h2 { color: #e94560; margin-bottom: 12px; }
+    .panel { background: #16213e; border: 1px solid #0f3460; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    label { display: block; font-size: 12px; color: #aaa; margin-bottom: 4px; margin-top: 10px; }
+    input, textarea { width: 100%; padding: 8px; background: #0f3460; border: 1px solid #e94560; border-radius: 4px; color: #fff; font-size: 13px; }
+    button { margin-top: 10px; padding: 8px 16px; background: #e94560; border: none; border-radius: 4px; color: #fff; cursor: pointer; font-size: 13px; }
+    button:hover { background: #c73652; }
+    button.secondary { background: #0f3460; }
+    button.secondary:hover { background: #1a4a8a; }
+    .log { background: #0a0a1a; border: 1px solid #333; border-radius: 4px; padding: 10px; height: 200px; overflow-y: auto; font-size: 12px; margin-top: 10px; }
+    .log .recv { color: #4ecca3; }
+    .log .sent { color: #e94560; }
+    .log .info { color: #aaa; }
+    .status { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #e94560; margin-right: 6px; }
+    .status.connected { background: #4ecca3; }
+    .role-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-left: 8px; }
+    .visitor-badge { background: #0f3460; color: #4ecca3; }
+    .admin-badge { background: #3d0f3a; color: #f4a261; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<h2>Socket.io Tester — Stupid &amp; Slow Pizza</h2>
+<p style="color:#aaa; font-size:12px; margin-bottom:16px;">Open this file in two tabs. Use one as Visitor, one as Admin.</p>
+
+<!-- REST API TESTER -->
+<div class="panel">
+  <h3 style="color:#f4a261; margin-bottom:8px;">REST API</h3>
+  <div style="display:grid; grid-template-columns: 100px 1fr 120px; gap:8px; align-items:end;">
+    <div>
+      <label>Method</label>
+      <select id="rest-method" style="width:100%; padding:8px; background:#0f3460; border:1px solid #e94560; border-radius:4px; color:#fff; font-size:13px;">
+        <option>GET</option>
+        <option selected>POST</option>
+        <option>PATCH</option>
+        <option>DELETE</option>
+      </select>
+    </div>
+    <div>
+      <label>URL</label>
+      <input id="rest-url" value="http://localhost:3000/api/chats" />
+    </div>
+    <div>
+      <button onclick="restSend()" style="width:100%; margin-top:22px;">Send</button>
+    </div>
+  </div>
+  <label>Body (JSON — leave empty for GET)</label>
+  <textarea id="rest-body" rows="3" style="font-size:12px;">{"firstName": "Sarah", "lastName": "Miller"}</textarea>
+  <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+    <button class="secondary" style="font-size:11px;" onclick="prefill('GET','http://localhost:3000/api/chats','')">GET /chats</button>
+    <button class="secondary" style="font-size:11px;" onclick="prefill('POST','http://localhost:3000/api/chats','{\"firstName\": \"Sarah\", \"lastName\": \"Miller\"}')">POST /chats</button>
+    <button class="secondary" style="font-size:11px;" onclick="prefill('POST','http://localhost:3000/api/auth/login','{\"username\": \"admin\", \"password\": \"admin\"}')">POST /login</button>
+    <button class="secondary" style="font-size:11px;" onclick="prefill('GET','http://localhost:3000/api/auth/me','')">GET /me</button>
+    <button class="secondary" style="font-size:11px;" onclick="prefill('POST','http://localhost:3000/api/auth/logout','')">POST /logout</button>
+  </div>
+  <label>Response</label>
+  <div class="log" id="rest-log" style="height:140px;"></div>
+</div>
+
+<div class="grid">
+
+  <!-- VISITOR PANEL -->
+  <div class="panel">
+    <h3><span class="status" id="v-status"></span>Visitor <span class="role-badge visitor-badge">VISITOR</span></h3>
+
+    <label>Chat ID (from POST /api/chats)</label>
+    <input id="v-chatid" placeholder="e.g. 1781664024402" />
+
+    <button onclick="vConnect()">Connect &amp; Join Room</button>
+    <button class="secondary" onclick="vDisconnect()">Disconnect</button>
+
+    <label>Message</label>
+    <input id="v-msg" placeholder="My pizza is late!" />
+    <button onclick="vSend()">Send Message</button>
+
+    <div class="log" id="v-log"></div>
+  </div>
+
+  <!-- ADMIN PANEL -->
+  <div class="panel">
+    <h3><span class="status" id="a-status"></span>Admin <span class="role-badge admin-badge">ADMIN</span></h3>
+
+    <label>Chat ID to join</label>
+    <input id="a-chatid" placeholder="e.g. 1781664024402" />
+
+    <button onclick="aConnect()">Connect &amp; Join Room</button>
+    <button class="secondary" onclick="aDisconnect()">Disconnect</button>
+
+    <label>Reply</label>
+    <input id="a-msg" placeholder="We're looking into it!" />
+    <button onclick="aSend()">Send Reply</button>
+    <button style="background:#6b3030; margin-left:6px;" onclick="aClose()">Close Ticket</button>
+
+    <div class="log" id="a-log"></div>
+  </div>
+
+</div>
+
+<script>
+  const SERVER = 'http://localhost:3000'
+  let vSocket = null
+  let aSocket = null
+  let visitorData = null // populated from POST /api/chats response
+
+  function log(logId, msg, type = 'info') {
+    const el = document.getElementById(logId)
+    const line = document.createElement('div')
+    line.className = type
+    line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`
+    el.appendChild(line)
+    el.scrollTop = el.scrollHeight
+  }
+
+  function setStatus(id, connected) {
+    const el = document.getElementById(id)
+    el.className = 'status' + (connected ? ' connected' : '')
+  }
+
+  // ── VISITOR ──────────────────────────────
+  function vConnect() {
+    if (vSocket) vSocket.disconnect()
+    vSocket = io(SERVER)
+    const chatId = document.getElementById('v-chatid').value.trim()
+
+    vSocket.on('connect', () => {
+      setStatus('v-status', true)
+      log('v-log', `Connected (socket id: ${vSocket.id})`)
+      if (chatId) {
+        vSocket.emit('join_chat', chatId)
+        log('v-log', `Joined room: ${chatId}`, 'sent')
+      }
+    })
+
+    vSocket.on('new_message', ({ chatId, message }) => {
+      log('v-log', `new_message → from:${message.from} "${message.text}"`, 'recv')
+    })
+
+    vSocket.on('chat_closed', ({ chatId }) => {
+      log('v-log', `chat_closed — ticket ${chatId} was closed by admin`, 'recv')
+    })
+
+    vSocket.on('error', (err) => log('v-log', `ERROR: ${err.message}`, 'sent'))
+    vSocket.on('disconnect', () => { setStatus('v-status', false); log('v-log', 'Disconnected') })
+  }
+
+  function vDisconnect() { if (vSocket) { vSocket.disconnect(); vSocket = null } }
+
+  function vSend() {
+    if (!vSocket) return alert('Connect first')
+    const chatId = document.getElementById('v-chatid').value.trim()
+    const text = document.getElementById('v-msg').value.trim()
+    if (!text) return
+    const from = visitorData
+      ? `${visitorData.firstName} ${visitorData.lastName} (${visitorData.initials})`
+      : 'visitor'
+    vSocket.emit('send_message', { chatId, from, text })
+    log('v-log', `send_message → "${text}"`, 'sent')
+    document.getElementById('v-msg').value = ''
+  }
+
+  // ── ADMIN ─────────────────────────────────
+  function aConnect() {
+    if (aSocket) aSocket.disconnect()
+    aSocket = io(SERVER)
+    const chatId = document.getElementById('a-chatid').value.trim()
+
+    aSocket.on('connect', () => {
+      setStatus('a-status', true)
+      log('a-log', `Connected (socket id: ${aSocket.id})`)
+      if (chatId) {
+        aSocket.emit('join_chat', chatId)
+        log('a-log', `Joined room: ${chatId}`, 'sent')
+      }
+    })
+
+    aSocket.on('new_message', ({ chatId, message }) => {
+      log('a-log', `new_message → from:${message.from} "${message.text}"`, 'recv')
+    })
+
+    aSocket.on('chat_closed', ({ chatId }) => {
+      log('a-log', `chat_closed — ticket ${chatId} confirmed closed`, 'recv')
+    })
+
+    aSocket.on('error', (err) => log('a-log', `ERROR: ${err.message}`, 'sent'))
+    aSocket.on('disconnect', () => { setStatus('a-status', false); log('a-log', 'Disconnected') })
+  }
+
+  function aDisconnect() { if (aSocket) { aSocket.disconnect(); aSocket = null } }
+
+  function aSend() {
+    if (!aSocket) return alert('Connect first')
+    const chatId = document.getElementById('a-chatid').value.trim()
+    const text = document.getElementById('a-msg').value.trim()
+    if (!text) return
+    aSocket.emit('send_message', { chatId, from: 'admin', text })
+    log('a-log', `send_message → "${text}"`, 'sent')
+    document.getElementById('a-msg').value = ''
+  }
+
+  function aClose() {
+    if (!aSocket) return alert('Connect first')
+    const chatId = document.getElementById('a-chatid').value.trim()
+    aSocket.emit('close_chat', chatId)
+    log('a-log', `close_chat → ${chatId}`, 'sent')
+  }
+
+  // ── REST ─────────────────────────────────
+  async function restSend() {
+    const method = document.getElementById('rest-method').value
+    const url = document.getElementById('rest-url').value.trim()
+    const rawBody = document.getElementById('rest-body').value.trim()
+
+    const opts = { method, credentials: 'include', headers: { 'Content-Type': 'application/json' } }
+    if (rawBody && method !== 'GET') opts.body = rawBody
+
+    const logEl = document.getElementById('rest-log')
+    const addLine = (text, cls) => {
+      const d = document.createElement('div')
+      d.className = cls || 'info'
+      d.textContent = text
+      logEl.appendChild(d)
+      logEl.scrollTop = logEl.scrollHeight
+    }
+
+    addLine(`→ ${method} ${url}`, 'sent')
+    try {
+      const res = await fetch(url, opts)
+      const text = await res.text()
+      let parsed = null
+      let display = text
+      try { parsed = JSON.parse(text); display = JSON.stringify(parsed, null, 2) } catch {}
+      addLine(`← ${res.status} ${res.statusText}`, res.ok ? 'recv' : 'sent')
+      display.split('\n').forEach(l => addLine(l, res.ok ? 'recv' : 'sent'))
+
+      // Auto-store visitor data when POST /api/chats succeeds
+      if (res.ok && method === 'POST' && url.endsWith('/api/chats') && parsed?.id) {
+        visitorData = { firstName: parsed.firstName, lastName: parsed.lastName, initials: parsed.initials }
+        addLine(`✓ Visitor stored: ${parsed.firstName} ${parsed.lastName} (${parsed.initials})`, 'info')
+        document.getElementById('v-chatid').value = parsed.id
+        document.getElementById('a-chatid').value = parsed.id
+        addLine(`✓ Chat ID auto-filled in both panels: ${parsed.id}`, 'info')
+      }
+    } catch (e) {
+      addLine(`ERROR: ${e.message}`, 'sent')
+    }
+  }
+
+  function prefill(method, url, body) {
+    document.getElementById('rest-method').value = method
+    document.getElementById('rest-url').value = url
+    document.getElementById('rest-body').value = body
+  }
+
+  // Enter key to send
+  document.getElementById('v-msg').addEventListener('keydown', e => e.key === 'Enter' && vSend())
+  document.getElementById('a-msg').addEventListener('keydown', e => e.key === 'Enter' && aSend())
+</script>
+</body>
+</html>

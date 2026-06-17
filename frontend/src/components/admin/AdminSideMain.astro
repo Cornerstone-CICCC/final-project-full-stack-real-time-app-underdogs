@@ -1,0 +1,89 @@
+---
+const currentPath = Astro.url.pathname
+
+const MOCK_TICKETS = [
+  {
+    id: "1001",
+    name: "John Smith",
+    initials: "JS",
+    time: "2:34 PM",
+    preview: "I haven't received my order yet...",
+    status: "Open",
+  },
+  {
+    id: "1002",
+    name: "Maria Gomez",
+    initials: "MG",
+    time: "1:15 PM",
+    preview: "There was a missing topping on my pizza",
+    status: "Open",
+  },
+  {
+    id: "1003",
+    name: "Alex Kim",
+    initials: "AK",
+    time: "11:52 AM",
+    preview: "Order was great, just a quick question about…",
+    status: "Closed",
+  },
+  {
+    id: "1004",
+    name: "Sara Tanaka",
+    initials: "ST",
+    time: "10:08 AM",
+    preview: "Wrong size delivered, expected large",
+    status: "Open",
+  },
+]
+---
+
+<div class="px-5 py-2 border-b border-black/5 shrink-0">
+  <span class="font-inter text-xs font-bold uppercase tracking-widest text-gray-400">
+    All Tickets
+  </span>
+</div>
+
+<div class="flex-1 overflow-y-auto">
+  {
+    MOCK_TICKETS.map((t) => {
+      const isSelected = currentPath === `/admin/chats/${t.id}`
+      return (
+      <a
+        href={`/admin/chats/${t.id}`}
+        class:list={[
+          "block w-full px-4 py-3 border-b border-black/5 border-l-4 transition-colors",
+          isSelected
+            ? "bg-amber-50 border-l-amber-700"
+            : "bg-white border-l-transparent hover:bg-gray-50",
+        ]}
+      >
+        <div class="flex items-start gap-3">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-amber-700">
+            <span class="font-inter text-xs font-bold text-white">{t.initials}</span>
+          </div>
+
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between">
+              <span class="font-inter text-sm font-semibold truncate">{t.name}</span>
+              <span class="font-inter text-[10px] text-gray-400 ml-2 shrink-0">{t.time}</span>
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <p class="font-inter text-xs text-gray-500 truncate leading-snug">{t.preview}</p>
+              <span
+                class:list={[
+                  "font-inter text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0",
+                  t.status === "Open"
+                    ? "bg-emerald-50 text-emerald-600"
+                    : "bg-gray-100 text-gray-400",
+                ]}
+              >
+                {t.status}
+              </span>
+            </div>
+          </div>
+        </div>
+      </a>
+      )
+    })
+  }
+</div>

@@ -1,0 +1,107 @@
+---
+import Icon from "@components/common/Icon.astro"
+import Button from "@components/common/Button.astro"
+---
+
+<div id="register-content" class="hidden relative bg-white rounded-2xl shadow-2xl p-10 w-full">
+  <button
+    data-modal-btn
+    class="absolute top-4 right-4 text-taupe-400 hover:text-taupe-600 transition-colors p-1 cursor-pointer"
+  >
+    <Icon name="X" width="18" height="18" />
+  </button>
+
+  <h2 class="font-barlow-condensed text-3xl font-black mb-2 tracking-wider">Open a ticket</h2>
+  <p class="font-inter text-sm text-taupe-500 mb-4">
+    Tell us your name to start chatting with an agent.
+  </p>
+
+  <div class="space-y-4 mb-8">
+    <div>
+      <label for="first-name" class="block font-inter text-sm font-semibold text-taupe-700 mb-1">
+        First name
+      </label>
+      <input
+        type="text"
+        id="first-name"
+        name="firstName"
+        placeholder="e.g. Margherita"
+        class="font-inter w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-taupe-900 placeholder-gray-300 bg-gray-50 focus:outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100 transition"
+      />
+    </div>
+    <div>
+      <label for="last-name" class="block font-inter text-sm font-semibold text-taupe-700 mb-1">
+        Last name
+      </label>
+      <input
+        type="text"
+        id="last-name"
+        name="lastName"
+        placeholder="e.g. Romano"
+        class="font-inter w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-taupe-900 placeholder-gray-300 bg-gray-50 focus:outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100 transition"
+      />
+    </div>
+  </div>
+
+  <Button id="start-chat-btn" disabled class="w-full bg-amber-700 text-white">Start chat</Button>
+</div>
+
+<script>
+  import { chatModalStatus, currentChatId } from "@stores/chatModal"
+  import { createChat } from "@lib/api/chat"
+  import { ApiError } from "@lib/api/client"
+  import { saveVisitor } from "@utils/localStorage"
+
+  const contentElement = document.getElementById("register-content") as HTMLDivElement
+  const btnElement = document.getElementById("start-chat-btn") as HTMLButtonElement
+  const firstNameInput = document.getElementById("first-name") as HTMLInputElement
+  const lastNameInput = document.getElementById("last-name") as HTMLInputElement
+
+  chatModalStatus.subscribe((status) => {
+    contentElement.classList.toggle("hidden", status !== "register")
+  })
+
+  function updateButtonState() {
+    const hasValues =
+      firstNameInput.value.trim().length > 0 && lastNameInput.value.trim().length > 0
+    btnElement.disabled = !hasValues
+  }
+
+  function setLoading(loading: boolean) {
+    btnElement.disabled = loading
+    btnElement.querySelector(".btn-label")?.classList.toggle("invisible", loading)
+    const spinner = btnElement.querySelector(".btn-spinner")!
+    spinner.classList.toggle("hidden", !loading)
+    spinner.classList.toggle("flex", loading)
+  }
+
+  firstNameInput.addEventListener("input", updateButtonState)
+  lastNameInput.addEventListener("input", updateButtonState)
+
+  btnElement.addEventListener("click", async () => {
+    const firstName = firstNameInput.value.trim()
+    const lastName = lastNameInput.value.trim()
+
+    setLoading(true)
+    try {
+      const { visitorId } = saveVisitor(firstName, lastName)
+      const res = await createChat({
+        visitorId,
+        firstName,
+        lastName,
+      })
+
+      if (!res.chatId) throw new Error("Invalid response: missing chatId")
+
+      currentChatId.set(res.chatId)
+      chatModalStatus.set("chat")
+    } catch (error: unknown) {
+      if (error instanceof ApiError) {
+        console.error(`API ERROR ${error.status}:`, error.message)
+      } else {
+        console.error(error)
+      }
+      setLoading(false)
+    }
+  })
+</script>

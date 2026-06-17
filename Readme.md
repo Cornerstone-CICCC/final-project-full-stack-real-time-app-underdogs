@@ -1,177 +1,66 @@
-# WAD202 Final Project - Full Stack Real-Time Web App
+## Getting Started
 
-This final project will help you build a full stack web application using Node.js, Express, Astro, authentication, API calls, and WebSockets.
+### Initial Setup (first time only)
 
-Teams: **4-5 students**
+Run the setup script from the project root. This installs all dependencies and copies `.env.example` files to `.env` in each directory.
 
-> Once teams are created, there are no more changes to team membership.
-> Once a project is chosen, teams cannot alter decision.
-
-> You SHOULD consult with your instructor before choosing a project.
-
-## Submission Checklist
-
-* Push your final code to GitHub.
-* Make sure the app runs from the `main` branch.
-* Include a clear `README.md`.
-* Include a presentation deck.
-* Hosting is **not required**.
-* Hosting both frontend and backend is a **big bonus**.
-* Every team member should contribute through Git commits.
-
-## The Challenge
-
-Build a full stack web app that feels like a real product — real users, protected pages, and live real-time interaction. Your project must include:
-
-**Frontend** — Astro with multiple pages/views, Tailwind CSS, responsive design, and clean components.
-
-**Backend** — Node.js + Express in MVC: separate routes, controllers, and data/model files, with server-side validation on important forms.
-
-**Authentication** — registration, login, and logout using session cookies; protected routes and a user-specific page. All logged-in users have the same permissions — no admin or role tiers (keep it simple).
-
-**WebSockets** — at least one meaningful real-time feature (e.g. live chat, notifications, leaderboard, order/task updates, or voting/polling).
-
-**Data** — no database required; store data in server memory (arrays/objects). It is fine if data resets when the server restarts.
-
-**External API (optional)** — optional, and only free public APIs if you use one.
-
-**Environment Variables** — use `.env` for secrets/config, never commit it, and include a `.env.example`:
-
-```txt
-PORT=3000
-SESSION_SECRET=your_session_secret_here
-API_KEY=your_api_key_here
+```bash
+./initial.sh
 ```
 
-## Project Options
+What it does:
+- `npm install` in root, `frontend/`, `backend/`, and `openapi/`
+- Copies `frontend/.env.example` → `frontend/.env`
+- Copies `frontend/.env.mock.example` → `frontend/.env.mock`
+- Copies `backend/.env.example` → `backend/.env`
 
-Pick **one** project. Two teams may choose the same one. The features listed are a starting point — feel free to add your own on top, and design the UI however you like.
+> Make sure to fill in `backend/.env` with your own `SESSION_SECRET` before running the app.
 
-### 1. Real-Time Chat App
+---
 
-Log in and chat one-on-one or in group rooms.
+### Local Development
 
-* Direct messages and group rooms; create / join / leave rooms
-* Online-users list and typing indicators
-* Message history kept in server memory
-* **Real-time:** live messages, presence, and typing indicators
-* **Optional API:** GIPHY (GIFs) or LibreTranslate (translate messages)
+Run from the **project root**:
 
-### 2. Customer Support Live Chat
+```bash
+# With real backend (normal development)
+npm run dev
 
-Visitors open a support chat; logged-in admins reply.
+# Without backend — uses Prism mock server instead
+npm run dev:mock
+```
 
-* Visitors are anonymous (no login). Only admins log in — the admin dashboard is the protected page.
-* Public chat widget to start a chat
-* Admin dashboard with a live queue of incoming chats
-* Any admin can open a chat and reply; status: open → closed
-* **Real-time:** visitor messages appear on the dashboard instantly; live two-way chat
-* **Optional API:** ip-api.com (visitor location / timezone)
+| Command | Frontend | Backend | Mock server | Swagger UI |
+|---|---|---|---|---|
+| `npm run dev` | ✅ | ✅ | — | ✅ |
+| `npm run dev:mock` | ✅ | — | ✅ | ✅ |
 
-### 3. Food Ordering Dashboard
+---
 
-Order from a menu; orders appear on a live kitchen board.
+### Port Reference
 
-* Menu with items and prices; cart with server-side validation
-* Order history
-* Kitchen board grouped by status
-* **Real-time:** new orders appear instantly; status updates (Received → Preparing → Ready) push back to the customer
-* **Optional API:** TheMealDB (menu items and photos)
+| Service | Port | URL |
+|---|---|---|
+| Frontend (Astro) | 4321 | http://localhost:4321 |
+| Backend (Express) | 3000 | http://localhost:3000 |
+| Prism mock server | 4010 | http://localhost:4010 |
+| Swagger UI | 8080 | http://localhost:8080 |
 
-### 4. Live Auction House
+---
 
-List items and bid; the highest bid and countdown update live.
+### Code Formatting
 
-* Browse auctions (item, current price, time left)
-* Place bids (server checks the bid beats the current one)
-* Countdown timer; auto-close and declare a winner; outbid alerts
-* **Real-time:** live bid and countdown updates; outbid and winner notifications
-* **Optional API:** Frankfurter (currency) or Unsplash (images)
+This repo uses a shared Prettier config at the project root (`.prettierrc`). You do **not** need separate configs in `frontend/` or `backend/` — Prettier picks up the root config automatically.
 
-### 5. Social Media / Blog Feed
+Install the Prettier VS Code extension (`esbenp.prettier-vscode`) and enable format-on-save. The `.vscode/settings.json` in this repo turns that on and requires a project config so personal editor settings do not override the team standard.
 
-Log in, write blog posts, and see them on a shared feed.
+From the project root:
 
-* Create posts (title + body); feed of posts, newest first
-* Profile pages; follow / unfollow; likes and comments
-* **Real-time:** new posts and notifications appear on the feed live
-* **Bonus:** attach images to posts; curate the feed by who you follow
-* **Optional API:** Unsplash (images) or DiceBear (avatars)
+```bash
+npm run format        # auto-fix formatting
+npm run format:check  # check only (useful in CI)
+```
 
-## Time Management
+Key rules: double quotes, no semicolons, 100-character line width.
 
-The project timeline is limited, so plan carefully before coding.
-
-Your team should clearly decide:
-
-* How much time to spend on setup
-* How much time to spend on UI design
-* Who is responsible for each feature
-* Which features are required vs optional
-* When coding should stop so testing and presentation work can begin
-
-Do not spend too much time making the UI perfect at the start. Build the core functionality first, then improve the design.
-
-Recommended priority:
-
-1. Project setup and task distribution
-2. Authentication
-3. Main pages and core features
-4. WebSocket functionality
-5. API integration
-6. UI polish and responsive design
-7. Testing and presentation preparation
-
-## Git Control
-
-* Protect the `main` branch.
-* Work on feature branches.
-* Push regularly.
-* Use clear commit messages.
-* Pull often to avoid conflicts.
-* Do not commit `.env` or `node_modules`.
-
-## Presentation Requirements
-
-Each team must present for about **~15 minutes**. (QA Time 5-10mins additional)
-
-Start your presentation with the **live demo first**. After the demo, explain the rest of the project.
-
-Your presentation should include:
-
-* Demo of the working app
-* What your app does
-* Who the users are
-* Main features
-* Tech stack
-* Authentication flow
-* WebSocket feature
-* API integration
-* Team member contributions
-* Challenges faced
-* What you would improve with more time
-
-Every team member should speak.
-
-## Marking Criteria
-
-Your final project will be evaluated based on:
-
-* Functionality
-* Full stack structure
-* Project structure (clean MVC organization)
-* Authentication
-* WebSocket implementation
-* API integration (if used)
-* Code quality and readability
-* UI/UX
-* Responsiveness
-* GitHub contribution history
-* Teamwork
-* Error handling
-* Presentation quality
-* **Deploying your Full Stack Project will be a huge BONUS**
-
-> ⚠️ You may use AI but be sure to know what code you are committing, as failure to explain your work in the presentation will be cost you marks!
-
-> Best of Luck!
+---
