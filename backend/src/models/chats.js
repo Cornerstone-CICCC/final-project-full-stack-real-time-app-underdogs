@@ -1,5 +1,5 @@
-// In-memory chat session store
 const chats = [];
+let nextId = 1001;
 
 function getAll() {
   return chats;
@@ -9,10 +9,13 @@ function findById(id) {
   return chats.find((c) => c.id === id);
 }
 
-function create(visitorName) {
+function create(firstName, lastName) {
+  const initials = `${firstName[0]}${lastName[0]}`.toUpperCase();
   const chat = {
-    id: Date.now().toString(),
-    visitorName,
+    id: String(nextId++),
+    firstName,
+    lastName,
+    initials,
     status: 'open',
     messages: [],
     createdAt: new Date().toISOString(),
@@ -21,10 +24,10 @@ function create(visitorName) {
   return chat;
 }
 
-function addMessage(chatId, sender, text) {
+function addMessage(chatId, from, text) {
   const chat = findById(chatId);
   if (!chat) return null;
-  const message = { sender, text, timestamp: new Date().toISOString() };
+  const message = { from, text, time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) };
   chat.messages.push(message);
   return message;
 }

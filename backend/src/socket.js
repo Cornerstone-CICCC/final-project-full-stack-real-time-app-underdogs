@@ -10,8 +10,8 @@ function initSocket(io) {
     })
 
     // Either side sends a message
-    socket.on("send_message", ({ chatId, sender, text }) => {
-      const message = chats.addMessage(chatId, sender, text)
+    socket.on("send_message", ({ chatId, from, text }) => {
+      const message = chats.addMessage(chatId, from, text)
       if (message) {
         io.to(chatId).emit("new_message", { chatId, message })
         // Notify admin dashboard of activity
@@ -22,7 +22,7 @@ function initSocket(io) {
     // Admin closes a chat
     socket.on("close_chat", (chatId) => {
       const chat = chats.updateStatus(chatId, "closed")
-      if (chat) io.to(chatId).emit("chat_closed", chatId)
+      if (chat) io.to(chatId).emit("chat_closed", { chatId })
     })
 
     socket.on("disconnect", () => {
