@@ -1,9 +1,38 @@
-const writeLog = require('./models/loging.js')
 const chats = require('./models/chats')
 
-//Memory stored unique ticket ID
-//It's reset every time server is restarted
-let ticketID = 0
+const fs = require('fs')
+function writeLog(log) {
+  let date_time = new Date()
+  let date = ('0' + date_time.getDate()).slice(-2)
+  let month = ('0' + (date_time.getMonth() + 1)).slice(-2)
+  let year = date_time.getFullYear()
+  let hours = date_time.getHours()
+  let minutes = date_time.getMinutes()
+  let seconds = date_time.getSeconds()
+  let dateWrite = ''
+  // prints date & time in YYYY-MM-DD HH:MM:SS format
+  dateWrite =
+    year +
+    '-' +
+    month +
+    '-' +
+    date +
+    ' ' +
+    hours +
+    ':' +
+    minutes +
+    ':' +
+    seconds +
+    ' ' +
+    log
+  fs.appendFile('models/logs.txt', dateWrite, 'utf8', (err) => {
+    if (err) {
+      console.log('Error writing logs file')
+      throw err
+    }
+    console.log('File written successfully')
+  })
+}
 
 function initSocket(io) {
   io.on('connection', (socket) => {
@@ -22,7 +51,7 @@ function initSocket(io) {
     socket.on('send_message', ({ chatId, sender, text }) => {
       if (!chatId || !sender || !text) {
         writeLog(
-          `Error: Missing required message fields. ${chatId} ${sender} ${text}`,
+          'Error: Missing required message fields.' + chatId + sender + text,
         )
         return socket.emit('error', {
           message: 'Missing required message fields.',
@@ -32,12 +61,14 @@ function initSocket(io) {
       // Check if ticket exists and if its still open
       const chat = chats.findById(chatId)
       if (!chat) {
-        writeLog(`Error: Chat not found.  ${chatId}`)
+        writeLog('Error: Chat not found.' + chatId)
         return socket.emit('error', { message: 'Chat not found.' })
       }
       if (chat.status === 'closed') {
         writeLog(
-          `Error: Cannot send messages to a closed ticket. ${chatId} ${chat.status}`,
+          'Error: Cannot send messages to a closed ticket.' +
+            chatId +
+            chat.status,
         )
         return socket.emit('error', {
           message: 'Cannot send messages to a closed ticket.',
@@ -47,8 +78,8 @@ function initSocket(io) {
       const message = chats.addMessage(chatId, sender, text)
 
       if (message) {
-        // Broadcast the saved message to everyone currently in the specific chat room, as confirmation to the sender
-        writeLog(`Send message ${chatId}`)
+        // Broadcast the saved message to everyone currently in the specific chat room
+        writeLog('Send message' + chatId)
         io.to(chatId).emit('receive_message', { chatId, message })
       }
     })
@@ -57,7 +88,7 @@ function initSocket(io) {
     socket.on('close_chat', (chatId) => {
       const updatedChat = chats.updateStatus(chatId, 'closed')
       if (updatedChat) {
-        writeLog(`Close chat ${chatId}`)
+        writeLog('Close chat' + chatId)
         io.to(chatId).emit('chat_closed', { chatId })
       }
     })
