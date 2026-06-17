@@ -46,8 +46,9 @@ import Icon from '@components/Icon.astro';
 
 <script>
   import { chatModalStatus, currentChatId } from '@stores/chatModal';
-  import { createChat } from '@lib/api/chat'
-  import { ApiError } from '@lib/api/client'
+  import { createChat } from '@lib/api/chat';
+  import { ApiError } from '@lib/api/client';
+  import { getOrCreateVisitorId } from '@utils/localStorage';
 
   const contentElement = document.getElementById('register-content');
   const btnElement = document.getElementById('start-chat-btn');
@@ -58,7 +59,8 @@ import Icon from '@components/Icon.astro';
 
   btnElement?.addEventListener('click', async () => {
     try {
-      const res = await createChat()
+      const visitorId = getOrCreateVisitorId();
+      const res = await createChat(visitorId);
       if (!res.id) throw new Error('Invalid response: missing id');
       currentChatId.set(res.id)
       chatModalStatus.set('chat');
@@ -66,7 +68,7 @@ import Icon from '@components/Icon.astro';
       if (error instanceof ApiError) {
         console.error(`API ERROR ${error.status}:`, error.message);
       } else {
-        console.error('Something')
+        console.error(error)
       }
     }
   });
