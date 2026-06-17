@@ -10,10 +10,11 @@ export default defineConfig({
     resolve: {
       alias: {
         "@components": `${src}/components`,
+        "@layouts": `${src}/layouts`,
         "@lib": `${src}/lib`,
-        "@utils": `${src}/utils`,
         "@stores": `${src}/stores`,
         "@types": `${src}/types`,
+        "@utils": `${src}/utils`,
       },
     },
   },
