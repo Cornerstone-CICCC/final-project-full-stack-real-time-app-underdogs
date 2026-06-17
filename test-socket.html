@@ -110,6 +110,7 @@
   const SERVER = 'http://localhost:3000'
   let vSocket = null
   let aSocket = null
+  let visitorData = null // populated from POST /api/chats response
 
   function log(logId, msg, type = 'info') {
     const el = document.getElementById(logId)
@@ -159,7 +160,10 @@
     const chatId = document.getElementById('v-chatid').value.trim()
     const text = document.getElementById('v-msg').value.trim()
     if (!text) return
-    vSocket.emit('send_message', { chatId, from: 'visitor', text })
+    const from = visitorData
+      ? `${visitorData.firstName} ${visitorData.lastName} (${visitorData.initials})`
+      : 'visitor'
+    vSocket.emit('send_message', { chatId, from, text })
     log('v-log', `send_message → "${text}"`, 'sent')
     document.getElementById('v-msg').value = ''
   }
@@ -232,10 +236,20 @@
     try {
       const res = await fetch(url, opts)
       const text = await res.text()
+      let parsed = null
       let display = text
-      try { display = JSON.stringify(JSON.parse(text), null, 2) } catch {}
+      try { parsed = JSON.parse(text); display = JSON.stringify(parsed, null, 2) } catch {}
       addLine(`← ${res.status} ${res.statusText}`, res.ok ? 'recv' : 'sent')
       display.split('\n').forEach(l => addLine(l, res.ok ? 'recv' : 'sent'))
+
+      // Auto-store visitor data when POST /api/chats succeeds
+      if (res.ok && method === 'POST' && url.endsWith('/api/chats') && parsed?.id) {
+        visitorData = { firstName: parsed.firstName, lastName: parsed.lastName, initials: parsed.initials }
+        addLine(`✓ Visitor stored: ${parsed.firstName} ${parsed.lastName} (${parsed.initials})`, 'info')
+        document.getElementById('v-chatid').value = parsed.id
+        document.getElementById('a-chatid').value = parsed.id
+        addLine(`✓ Chat ID auto-filled in both panels: ${parsed.id}`, 'info')
+      }
     } catch (e) {
       addLine(`ERROR: ${e.message}`, 'sent')
     }
