@@ -9,13 +9,23 @@ function initSocket(io) {
       socket.join(chatId)
     })
 
-    // Either side sends a message
+    // Sending and receiving messages
     socket.on("send_message", ({ chatId, from, text }) => {
+      if (!chatId || !from || !text)
+        return socket.emit("error", { message: "Missing required message fields." })
+
+      const chat = chats.findById(chatId)
+      
+      // Check if ticket exists and if its still open
+      if (!chat)
+        return socket.emit("error", { message: "Chat not found." })
+      if (chat.status === "closed")
+        return socket.emit("error", { message: "Cannot send messages to a closed ticket." })
+
+      // Save message and notify other users
       const message = chats.addMessage(chatId, from, text)
       if (message) {
         io.to(chatId).emit("new_message", { chatId, message })
-        // Notify admin dashboard of activity
-        io.emit("chat_updated", chats.findById(chatId))
       }
     })
 
