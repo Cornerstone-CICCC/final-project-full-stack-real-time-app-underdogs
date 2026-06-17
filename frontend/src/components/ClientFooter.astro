@@ -1,24 +1,12 @@
+---
+import Icon from '@components/Icon.astro';
+---
+
 <footer class="font-inter flex items-center justify-between px-10 py-4 border-t border-amber-900/20 bg-amber-500/10">
   <div class="flex items-center gap-3">
     <!-- Pizza icon -->
-    <div class="w-7 h-7 rounded-full flex items-center justify-center shrink-0 bg-amber-700">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="13"
-        height="13"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="white"
-        stroke-width="2.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M15 11h.01"/>
-        <path d="M11 15h.01"/>
-        <path d="M16 16h.01"/>
-        <path d="m2 16 20 6-6-20A20 20 0 0 0 2 16"/>
-        <path d="M5.71 17.11a17.04 17.04 0 0 1 11.4-11.4"/>
-      </svg>
+    <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-amber-700">
+      <Icon name="Pizza" width="16" height="16" color="white" />
     </div>
 
     <p class="text-sm">
@@ -27,7 +15,7 @@
     </p>
   </div>
 
-  <button class="px-6 py-3 rounded-md text-white text-sm font-semibold transition-opacity hover:opacity-90 bg-amber-700 cursor-pointer">
+  <button data-modal-btn class="px-6 py-3 rounded-md text-white text-sm font-semibold transition-opacity hover:opacity-90 bg-amber-700 cursor-pointer">
     Chat with us
   </button>
 </footer>
