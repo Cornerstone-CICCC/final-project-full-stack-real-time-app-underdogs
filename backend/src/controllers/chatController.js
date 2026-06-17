@@ -11,9 +11,10 @@ function getChatById(req, res) {
 }
 
 function startChat(req, res) {
-  const { visitorName } = req.body
-  if (!visitorName) return res.status(400).json({ error: "Visitor name is required" })
-  const chat = chats.create(visitorName)
+  const { firstName, lastName } = req.body
+  if (!firstName || !lastName)
+    return res.status(400).json({ error: "firstName and lastName are required" })
+  const chat = chats.create(firstName, lastName)
   res.status(201).json(chat)
 }
 
