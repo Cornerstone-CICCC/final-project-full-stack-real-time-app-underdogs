@@ -1,5 +1,5 @@
-const chats = require('../models/chats')
-const writeLog = require('../models/loging.js')
+const chats = require("../models/chats")
+const { getIo } = require("../socket")
 
 function getAllChats(req, res) {
   res.json(chats.getAll())
@@ -7,10 +7,7 @@ function getAllChats(req, res) {
 
 function getChatById(req, res) {
   const chat = chats.findById(req.params.id)
-  if (!chat) {
-    writeLog(`Error: Chat not found (Open) ${JSON.stringify(req.body)}`)
-    return res.status(404).json({ error: 'Chat not found' })
-  }
+  if (!chat) return res.status(404).json({ error: "Chat not found" })
   res.json(chat)
 }
 
@@ -18,16 +15,19 @@ function startChat(req, res) {
   const { firstName, lastName } = req.body
   if (!firstName || !lastName)
     return res.status(400).json({ error: "firstName and lastName are required" })
+
   const chat = chats.create(firstName, lastName)
+
+  // Notify admin dashboard of new ticket
+  const io = getIo()
+  if (io) io.to("admin").emit("chat:new", chat)
+
   res.status(201).json(chat)
 }
 
 function closeChat(req, res) {
-  const chat = chats.updateStatus(req.params.id, 'closed')
-  if (!chat) {
-    writeLog(`Error: Chat not found (Close) ${JSON.stringify(req.body)}`)
-    return res.status(404).json({ error: 'Chat not found' })
-  }
+  const chat = chats.updateStatus(req.params.id, "closed")
+  if (!chat) return res.status(404).json({ error: "Chat not found" })
   res.json(chat)
 }
 
