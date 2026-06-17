@@ -1,1 +1,3 @@
-Hello, World! 2026-06-15 20:40:12
+2026-06-16 20:50:57 Hello world
+2026-06-16 20:51:0 Error:Authentication required {"username":"user1","password":"pass1"}
+2026-06-16 20:51:0 Error: Chat not found (Open) {"username":"user1","password":"pass1"}
