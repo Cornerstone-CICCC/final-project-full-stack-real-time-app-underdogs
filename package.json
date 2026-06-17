@@ -4,9 +4,13 @@
   "description": "SupportFlow monorepo root",
   "scripts": {
     "dev": "concurrently -n frontend,backend,swagger -c blue,green,yellow \"npm run dev --prefix frontend\" \"npm start --prefix backend\" \"npm run swagger --prefix openapi\"",
-    "dev:mock": "concurrently -n frontend,mock,swagger -c blue,magenta,yellow \"npm run dev:mock --prefix frontend\" \"npm run mock --prefix openapi\" \"npm run swagger --prefix openapi\""
+    "dev:mock": "concurrently -n frontend,mock,swagger -c blue,magenta,yellow \"npm run dev:mock --prefix frontend\" \"npm run mock --prefix openapi\" \"npm run swagger --prefix openapi\"",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
-    "concurrently": "^8.2.0"
+    "concurrently": "^8.2.0",
+    "prettier": "^3.5.3",
+    "prettier-plugin-astro": "^0.14.1"
   }
 }
