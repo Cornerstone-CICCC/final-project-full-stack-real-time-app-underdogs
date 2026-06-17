@@ -1,0 +1,37 @@
+<div id="modal-wrapper" class="hidden fixed inset-0 items-center justify-center z-50 bg-black/45 backdrop-blur-sm">
+  <div id="modal-inner" class="w-full max-w-100 transition-[max-width] duration-300 ease-in-out">
+    <slot />
+  </div>
+</div>
+
+<script>
+  import { isModalOpen, chatModalStatus } from '@stores/chatModal';
+
+  const wrapperElement = document.getElementById('modal-wrapper');
+  const innerElement = document.getElementById('modal-inner');
+
+  isModalOpen.subscribe((isOpen) => {
+    if (isOpen) {
+      wrapperElement?.classList.remove('hidden');
+      wrapperElement?.classList.add('flex');
+    } else {
+      wrapperElement?.classList.remove('flex');
+      wrapperElement?.classList.add('hidden');
+    }
+    document.body.classList.toggle('overflow-hidden', isOpen);
+  });
+
+  chatModalStatus.subscribe((status) => {
+    if (status === 'register') {
+      innerElement?.classList.replace('max-w-160', 'max-w-100');
+    } else {
+      innerElement?.classList.replace('max-w-100', 'max-w-160');
+    }
+  });
+
+  document.querySelectorAll('[data-modal-btn]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      isModalOpen.set(!isModalOpen.get());
+    });
+  });
+</script>
