@@ -1,0 +1,23 @@
+---
+import AdminBaseLayout from "@layouts/AdminBaseLayout.astro"
+import AdminMainHeader from "@components/admin/AdminMainHeader.astro"
+import AdminMainContents from "@components/admin/AdminMainContents.astro"
+import AdminMainFooter from "@components/admin/AdminMainFooter.astro"
+
+export function getStaticPaths() {
+  return [
+    { params: { id: "1001" } },
+    { params: { id: "1002" } },
+    { params: { id: "1003" } },
+    { params: { id: "1004" } },
+  ]
+}
+
+const { id } = Astro.params
+---
+
+<AdminBaseLayout title={`Chat ${id}`}>
+  <AdminMainHeader />
+  <AdminMainContents />
+  <AdminMainFooter />
+</AdminBaseLayout>

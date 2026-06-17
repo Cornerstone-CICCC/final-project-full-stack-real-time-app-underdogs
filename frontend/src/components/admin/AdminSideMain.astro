@@ -1,4 +1,6 @@
 ---
+const currentPath = Astro.url.pathname
+
 const MOCK_TICKETS = [
   {
     id: "1001",
@@ -43,11 +45,14 @@ const MOCK_TICKETS = [
 
 <div class="flex-1 overflow-y-auto">
   {
-    MOCK_TICKETS.map((t, i) => (
-      <div
+    MOCK_TICKETS.map((t) => {
+      const isSelected = currentPath === `/admin/chats/${t.id}`
+      return (
+      <a
+        href={`/admin/chats/${t.id}`}
         class:list={[
-          "w-full px-4 py-3 border-b border-black/5 border-l-4 transition-colors",
-          i === 0
+          "block w-full px-4 py-3 border-b border-black/5 border-l-4 transition-colors",
+          isSelected
             ? "bg-amber-50 border-l-amber-700"
             : "bg-white border-l-transparent hover:bg-gray-50",
         ]}
@@ -77,7 +82,8 @@ const MOCK_TICKETS = [
             </div>
           </div>
         </div>
-      </div>
-    ))
+      </a>
+      )
+    })
   }
 </div>
