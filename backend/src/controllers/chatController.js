@@ -1,4 +1,5 @@
 const chats = require("../models/chats")
+const { getIo } = require("../socket")
 
 function getAllChats(req, res) {
   res.json(chats.getAll())
@@ -14,7 +15,13 @@ function startChat(req, res) {
   const { firstName, lastName } = req.body
   if (!firstName || !lastName)
     return res.status(400).json({ error: "firstName and lastName are required" })
+
   const chat = chats.create(firstName, lastName)
+
+  // Notify admin dashboard of new ticket
+  const io = getIo()
+  if (io) io.to("admin").emit("chat:new", chat)
+
   res.status(201).json(chat)
 }
 

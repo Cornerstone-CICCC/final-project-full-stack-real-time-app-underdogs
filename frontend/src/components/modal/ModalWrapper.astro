@@ -8,39 +8,22 @@
 </div>
 
 <script>
-  import { isModalOpen, chatModalStatus, currentChatId } from "@stores/chatModal"
-  import { getVisitor } from "@utils/localStorage"
-  import { createChat } from "@lib/api/chat"
+  import { isModalOpen, chatModalStatus, currentChatId, visitorName } from "@stores/chatModal"
 
   const wrapperElement = document.getElementById("modal-wrapper") as HTMLDivElement
   const innerElement = document.getElementById("modal-inner") as HTMLDivElement
 
-  isModalOpen.subscribe(async (isOpen) => {
+  isModalOpen.subscribe((isOpen) => {
     if (isOpen) {
       wrapperElement.classList.remove("hidden")
       wrapperElement.classList.add("flex")
-
-      const visitor = getVisitor()
-      if (visitor) {
-        chatModalStatus.set("chat")
-        try {
-          const res = await createChat({
-            visitorId: visitor.visitorId,
-            firstName: visitor.firstName,
-            lastName: visitor.lastName,
-          })
-          if (res.chatId) currentChatId.set(res.chatId)
-        } catch {
-          chatModalStatus.set("register")
-        }
-      } else {
-        chatModalStatus.set("register")
-      }
+      chatModalStatus.set("register")
     } else {
       wrapperElement.classList.remove("flex")
       wrapperElement.classList.add("hidden")
       chatModalStatus.set("register")
       currentChatId.set(null)
+      visitorName.set(null)
     }
     document.body.classList.toggle("overflow-hidden", isOpen)
   })

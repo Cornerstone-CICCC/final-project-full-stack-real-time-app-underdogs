@@ -136,7 +136,7 @@
       setStatus('v-status', true)
       log('v-log', `Connected (socket id: ${vSocket.id})`)
       if (chatId) {
-        vSocket.emit('join_chat', chatId)
+        vSocket.emit('visitor:join', { chatId })
         log('v-log', `Joined room: ${chatId}`, 'sent')
       }
     })
@@ -177,8 +177,10 @@
     aSocket.on('connect', () => {
       setStatus('a-status', true)
       log('a-log', `Connected (socket id: ${aSocket.id})`)
+      aSocket.emit('admin:join')
+      log('a-log', 'Joined admin room', 'sent')
       if (chatId) {
-        aSocket.emit('join_chat', chatId)
+        aSocket.emit('visitor:join', { chatId })
         log('a-log', `Joined room: ${chatId}`, 'sent')
       }
     })
