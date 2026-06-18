@@ -15,7 +15,7 @@ import Icon from "@components/common/Icon.astro"
       </div>
       <div>
         <p class="font-inter text-sm font-semibold text-white leading-none">Support Agent</p>
-        <p class="font-inter text-xs text-orange-200 mt-0.5 flex items-center gap-1.5">
+        <p id="connection-status" class="font-inter text-xs text-orange-200 mt-0.5 flex items-center gap-1.5">
           <span class="w-1.5 h-1.5 rounded-full bg-green-300 inline-block"></span>
           Agent connected
         </p>
@@ -54,27 +54,35 @@ import Icon from "@components/common/Icon.astro"
 </div>
 
 <script>
-  import { chatModalStatus, currentChatId } from "@stores/chatModal"
-  import { sendMessage } from "@lib/api/chat"
-  import { ApiError } from "@lib/api/client"
+  import { io } from "socket.io-client"
+  import { chatModalStatus, currentChatId, visitorName } from "@stores/chatModal"
 
   const chatElement = document.getElementById("chat-content") as HTMLDivElement
   const messagesContainer = document.getElementById("messages-container") as HTMLDivElement
   const chatInput = document.getElementById("chat-input") as HTMLInputElement
   const sendBtn = document.getElementById("send-btn") as HTMLButtonElement
+  const connectionStatus = document.getElementById("connection-status") as HTMLParagraphElement
+
+  const SOCKET_URL = import.meta.env.PUBLIC_SOCKET_URL ?? "http://localhost:3000"
+  const socket = io(SOCKET_URL, { withCredentials: true })
 
   chatModalStatus.subscribe((status) => {
     if (status === "chat") {
       chatElement.classList.remove("hidden")
       chatElement.classList.add("flex")
+
+      const chatId = currentChatId.get()
+      if (chatId) {
+        socket.emit("visitor:join", { chatId })
+      }
     } else {
       chatElement.classList.remove("flex")
       chatElement.classList.add("hidden")
+      messagesContainer.innerHTML = ""
     }
   })
 
-  function appendMessage(text: string, from: "visitor" | "admin") {
-    const isVisitor = from === "visitor"
+  function appendMessage(text: string, isVisitor: boolean) {
     const bubble = document.createElement("div")
     bubble.className = `flex ${isVisitor ? "justify-end" : "justify-start"}`
     bubble.innerHTML = `
@@ -90,23 +98,28 @@ import Icon from "@components/common/Icon.astro"
     messagesContainer.scrollTo({ top: messagesContainer.scrollHeight, behavior: "smooth" })
   }
 
-  async function handleSend() {
+  socket.on("new_message", ({ message }: { chatId: string; message: { from: string; text: string; time: string } }) => {
+    const name = visitorName.get()
+    appendMessage(message.text, message.from === name)
+  })
+
+  socket.on("chat_closed", () => {
+    chatInput.disabled = true
+    sendBtn.disabled = true
+    connectionStatus.innerHTML = `
+      <span class="w-1.5 h-1.5 rounded-full bg-red-400 inline-block"></span>
+      Chat closed
+    `
+  })
+
+  function handleSend() {
     const text = chatInput.value.trim()
     const chatId = currentChatId.get()
-    if (!text || !chatId) return
+    const name = visitorName.get()
+    if (!text || !chatId || !name) return
 
     chatInput.value = ""
-    appendMessage(text, "visitor")
-
-    try {
-      await sendMessage({ chatId, from: "visitor", text })
-    } catch (error: unknown) {
-      if (error instanceof ApiError) {
-        console.error(`API ERROR ${error.status}:`, error.message)
-      } else {
-        console.error(error)
-      }
-    }
+    socket.emit("send_message", { chatId, from: name, text })
   }
 
   sendBtn.addEventListener("click", handleSend)

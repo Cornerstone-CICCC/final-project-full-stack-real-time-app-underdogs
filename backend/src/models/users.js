@@ -1,14 +1,16 @@
-// In-memory admin user store
-const users = [];
+const crypto = require("crypto")
 
-function findByUsername(username) {
-  return users.find((u) => u.username === username);
+function hashPassword(password) {
+  return crypto.createHash("sha256").update(password).digest("hex")
 }
 
-function create(username, passwordHash) {
-  const user = { id: Date.now().toString(), username, passwordHash };
-  users.push(user);
-  return user;
+// Single fixed admin account — pre-seeded on startup
+const users = [
+  { id: "1", email: "admin@admin.com", passwordHash: hashPassword("admin") },
+]
+
+function findByEmail(email) {
+  return users.find((u) => u.email === email)
 }
 
-module.exports = { findByUsername, create };
+module.exports = { findByEmail }

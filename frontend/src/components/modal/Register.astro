@@ -47,10 +47,9 @@ import Button from "@components/common/Button.astro"
 </div>
 
 <script>
-  import { chatModalStatus, currentChatId } from "@stores/chatModal"
+  import { chatModalStatus, currentChatId, visitorName } from "@stores/chatModal"
   import { createChat } from "@lib/api/chat"
   import { ApiError } from "@lib/api/client"
-  import { saveVisitor } from "@utils/localStorage"
 
   const contentElement = document.getElementById("register-content") as HTMLDivElement
   const btnElement = document.getElementById("start-chat-btn") as HTMLButtonElement
@@ -84,16 +83,10 @@ import Button from "@components/common/Button.astro"
 
     setLoading(true)
     try {
-      const { visitorId } = saveVisitor(firstName, lastName)
-      const res = await createChat({
-        visitorId,
-        firstName,
-        lastName,
-      })
+      const chat = await createChat({ firstName, lastName })
 
-      if (!res.chatId) throw new Error("Invalid response: missing chatId")
-
-      currentChatId.set(res.chatId)
+      currentChatId.set(chat.id)
+      visitorName.set(`${firstName} ${lastName}`)
       chatModalStatus.set("chat")
     } catch (error: unknown) {
       if (error instanceof ApiError) {

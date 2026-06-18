@@ -1,46 +1,38 @@
 import { apiFetch } from "@lib/api/client"
 
 type CreateChatBody = {
-  visitorId: string
   firstName: string
   lastName: string
 }
 
-type SendMessageBody = {
-  chatId: string
-  from: "visitor" | "admin"
-  text: string
+export type Chat = {
+  id: string
+  firstName: string
+  lastName: string
+  initials: string
+  status: "open" | "closed"
+  messages: Message[]
+  createdAt: string
 }
 
-type Message = {
-  from: "visitor" | "admin"
+export type Message = {
+  from: string
   text: string
   time: string
 }
 
-export async function createChat({
-  visitorId,
-  firstName,
-  lastName,
-}: CreateChatBody): Promise<{ chatId: string }> {
+export async function createChat({ firstName, lastName }: CreateChatBody): Promise<Chat> {
   return await apiFetch("/chats", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      visitorId,
-      firstName,
-      lastName,
-    }),
+    body: JSON.stringify({ firstName, lastName }),
   })
 }
 
-export async function sendMessage({ chatId, from, text }: SendMessageBody): Promise<Message> {
-  return await apiFetch(`/chats/${chatId}/messages`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from,
-      text,
-    }),
-  })
+export async function getAllChats(): Promise<Chat[]> {
+  return await apiFetch("/chats")
+}
+
+export async function getChatById(id: string): Promise<Chat> {
+  return await apiFetch(`/chats/${id}`)
 }
