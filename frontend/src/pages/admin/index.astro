@@ -9,3 +9,12 @@ import AdminBaseLayout from "@layouts/AdminBaseLayout.astro"
     </div>
   </div>
 </AdminBaseLayout>
+
+<script>
+  const API = import.meta.env.PUBLIC_API_URL ?? "http://localhost:3000/api"
+
+  const res = await fetch(`${API}/auth/me`, { credentials: "include" })
+  if (!res.ok) {
+    window.location.href = "/admin/login"
+  }
+</script>

@@ -1,5 +1,102 @@
-<main class="flex flex-col items-center justify-center min-h-screen gap-6">
-  <h1 class="text-2xl font-bold">Admin Login</h1>
-  <!-- Login form will go here -->
-  <p class="text-gray-500">Login form coming soon</p>
-</main>
+---
+import "../../styles/global.css"
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Login | S&S Pizza</title>
+  </head>
+  <body class="min-h-screen flex items-center justify-center bg-gray-50 font-inter">
+    <div class="w-full max-w-sm bg-white rounded-2xl shadow-xl p-10">
+      <div class="flex items-center gap-2 mb-8">
+        <div class="w-7 h-7 rounded-md bg-amber-700 flex items-center justify-center text-white text-xs font-black">
+          S
+        </div>
+        <span class="font-barlow-condensed text-base font-black uppercase tracking-wider">
+          S&amp;S Pizza
+        </span>
+      </div>
+
+      <h1 class="font-barlow-condensed text-3xl font-black tracking-wider mb-1">Admin login</h1>
+      <p class="text-sm text-gray-400 mb-8">Support inbox access only.</p>
+
+      <div id="error-msg" class="hidden mb-4 px-4 py-3 rounded-lg bg-red-50 text-red-600 text-sm"></div>
+
+      <div class="space-y-4 mb-6">
+        <div>
+          <label for="email" class="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+          <input
+            type="email"
+            id="email"
+            placeholder="admin@admin.com"
+            class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 bg-gray-50 placeholder-gray-300 focus:outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100 transition"
+          />
+        </div>
+        <div>
+          <label for="password" class="block text-sm font-semibold text-gray-700 mb-1">Password</label>
+          <input
+            type="password"
+            id="password"
+            placeholder="••••••••"
+            class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 bg-gray-50 placeholder-gray-300 focus:outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100 transition"
+          />
+        </div>
+      </div>
+
+      <button
+        id="login-btn"
+        class="w-full bg-amber-700 text-white font-semibold text-sm rounded-xl py-3 hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50"
+      >
+        Sign in
+      </button>
+    </div>
+  </body>
+</html>
+
+<script>
+  const API = import.meta.env.PUBLIC_API_URL ?? "http://localhost:3000/api"
+  const emailInput = document.getElementById("email") as HTMLInputElement
+  const passwordInput = document.getElementById("password") as HTMLInputElement
+  const loginBtn = document.getElementById("login-btn") as HTMLButtonElement
+  const errorMsg = document.getElementById("error-msg") as HTMLDivElement
+
+  async function handleLogin() {
+    const email = emailInput.value.trim()
+    const password = passwordInput.value
+
+    if (!email || !password) return
+
+    loginBtn.disabled = true
+    loginBtn.textContent = "Signing in…"
+    errorMsg.classList.add("hidden")
+
+    try {
+      const res = await fetch(`${API}/auth/login`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error ?? "Invalid credentials")
+      }
+
+      window.location.href = "/admin"
+    } catch (err: unknown) {
+      errorMsg.textContent = err instanceof Error ? err.message : "Login failed"
+      errorMsg.classList.remove("hidden")
+      loginBtn.disabled = false
+      loginBtn.textContent = "Sign in"
+    }
+  }
+
+  loginBtn.addEventListener("click", handleLogin)
+  passwordInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") handleLogin()
+  })
+</script>

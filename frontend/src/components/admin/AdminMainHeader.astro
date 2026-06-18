@@ -1,20 +1,62 @@
 ---
+import Icon from "@components/common/Icon.astro"
 ---
 
-<header class="h-16 flex items-center justify-between px-7 border-b border-black/7 bg-white shrink-0">
+<header id="main-header" class="h-16 flex items-center justify-between px-7 border-b border-black/7 bg-white shrink-0">
   <div class="flex items-center gap-3">
     <div class="w-9 h-9 rounded-full flex items-center justify-center shrink-0 bg-amber-700">
-      <span class="font-inter text-xs font-bold text-white">SM</span>
+      <span id="header-initials" class="font-inter text-xs font-bold text-white">?</span>
     </div>
     <div>
-      <p class="font-inter text-sm font-bold text-gray-900">Sofia Martinez</p>
-      <p class="font-inter text-[10px] text-gray-400">Ticket #4521 &middot; Opened 2 min ago</p>
+      <p id="header-name" class="font-inter text-sm font-bold text-gray-900">Loading…</p>
+      <p id="header-meta" class="font-inter text-[10px] text-gray-400"></p>
     </div>
   </div>
 
   <button
-    class="font-inter text-sm font-semibold text-gray-600 border border-black/12 rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer"
+    id="close-ticket-btn"
+    class="font-inter text-sm font-semibold text-gray-600 border border-black/12 rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-40"
   >
     Close ticket
   </button>
 </header>
+
+<script>
+  import { io } from "socket.io-client"
+
+  const API = import.meta.env.PUBLIC_API_URL ?? "http://localhost:3000/api"
+  const SOCKET_URL = import.meta.env.PUBLIC_SOCKET_URL ?? "http://localhost:3000"
+
+  const chatId = (document.getElementById("chat-root") as HTMLElement)?.dataset.chatId
+  if (!chatId) throw new Error("No chat ID")
+
+  const nameEl = document.getElementById("header-name") as HTMLElement
+  const initialsEl = document.getElementById("header-initials") as HTMLElement
+  const metaEl = document.getElementById("header-meta") as HTMLElement
+  const closeBtn = document.getElementById("close-ticket-btn") as HTMLButtonElement
+
+  const res = await fetch(`${API}/chats/${chatId}`, { credentials: "include" })
+  if (res.ok) {
+    const chat = await res.json()
+    nameEl.textContent = `${chat.firstName} ${chat.lastName}`
+    initialsEl.textContent = chat.initials
+    metaEl.textContent = `Ticket #${chat.id}`
+    if (chat.status === "closed") {
+      closeBtn.disabled = true
+      closeBtn.textContent = "Ticket closed"
+    }
+  }
+
+  const socket = io(SOCKET_URL, { withCredentials: true })
+  socket.emit("admin:join")
+  socket.emit("visitor:join", { chatId })
+
+  closeBtn.addEventListener("click", () => {
+    socket.emit("close_chat", chatId)
+  })
+
+  socket.on("chat_closed", () => {
+    closeBtn.disabled = true
+    closeBtn.textContent = "Ticket closed"
+  })
+</script>

@@ -1,55 +1,41 @@
----
-const MOCK_MESSAGES = [
-  {
-    id: 1,
-    sender: "visitor",
-    text: "Hi! I ordered a pizza an hour ago and it still hasn't arrived.",
-    time: "2:31 PM",
-  },
-  {
-    id: 2,
-    sender: "admin",
-    text: "Hi Sofia! I'm sorry to hear that. Let me check your order status right away.",
-    time: "2:32 PM",
-  },
-  {
-    id: 3,
-    sender: "visitor",
-    text: "Order number is #4521. I've been waiting for over an hour now.",
-    time: "2:33 PM",
-  },
-  {
-    id: 4,
-    sender: "admin",
-    text: "I can see your order is on the way — the driver is about 10 minutes away!",
-    time: "2:34 PM",
-  },
-]
----
+<div id="messages-container" class="flex-1 overflow-y-auto px-7 py-6 space-y-4 bg-gray-50"></div>
 
-<div class="flex-1 overflow-y-auto px-7 py-6 space-y-4 bg-gray-50">
-  {
-    MOCK_MESSAGES.map((msg) => (
-      <div class:list={["flex", msg.sender === "admin" ? "justify-end" : "justify-start"]}>
-        <div
-          class:list={[
-            "max-w-[68%] rounded-2xl px-4 py-3",
-            msg.sender === "admin"
-              ? "bg-amber-700 text-white rounded-br"
-              : "bg-white text-gray-800 rounded-bl shadow-sm border border-black/6",
-          ]}
-        >
-          <p class="font-inter text-sm leading-relaxed">{msg.text}</p>
-          <p
-            class:list={[
-              "font-inter text-[10px] mt-1",
-              msg.sender === "admin" ? "text-orange-200" : "text-gray-400",
-            ]}
-          >
-            {msg.time}
-          </p>
-        </div>
+<script>
+  import { io } from "socket.io-client"
+
+  const API = import.meta.env.PUBLIC_API_URL ?? "http://localhost:3000/api"
+  const SOCKET_URL = import.meta.env.PUBLIC_SOCKET_URL ?? "http://localhost:3000"
+
+  const chatId = (document.getElementById("chat-root") as HTMLElement)?.dataset.chatId
+  if (!chatId) throw new Error("No chat ID")
+
+  const container = document.getElementById("messages-container") as HTMLDivElement
+
+  function appendMessage(from: string, text: string, time: string) {
+    const isAdmin = from === "admin"
+    const div = document.createElement("div")
+    div.className = `flex ${isAdmin ? "justify-end" : "justify-start"}`
+    div.innerHTML = `
+      <div class="max-w-[68%] rounded-2xl px-4 py-3 ${isAdmin ? "bg-amber-700 text-white rounded-br" : "bg-white text-gray-800 rounded-bl shadow-sm border border-black/6"}">
+        <p class="font-inter text-sm leading-relaxed">${text}</p>
+        <p class="font-inter text-[10px] mt-1 ${isAdmin ? "text-orange-200" : "text-gray-400"}">${time}</p>
       </div>
-    ))
+    `
+    container.appendChild(div)
+    container.scrollTo({ top: container.scrollHeight, behavior: "smooth" })
   }
-</div>
+
+  const res = await fetch(`${API}/chats/${chatId}`, { credentials: "include" })
+  if (res.ok) {
+    const chat = await res.json()
+    chat.messages.forEach((m: any) => appendMessage(m.from, m.text, m.time))
+  }
+
+  const socket = io(SOCKET_URL, { withCredentials: true })
+  socket.emit("visitor:join", { chatId })
+
+  socket.on("new_message", ({ chatId: incomingId, message }: any) => {
+    if (incomingId !== chatId) return
+    appendMessage(message.from, message.text, message.time)
+  })
+</script>
