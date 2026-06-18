@@ -1,40 +1,5 @@
 ---
 const currentPath = Astro.url.pathname
-
-const MOCK_TICKETS = [
-  {
-    id: "1001",
-    name: "John Smith",
-    initials: "JS",
-    time: "2:34 PM",
-    preview: "I haven't received my order yet...",
-    status: "Open",
-  },
-  {
-    id: "1002",
-    name: "Maria Gomez",
-    initials: "MG",
-    time: "1:15 PM",
-    preview: "There was a missing topping on my pizza",
-    status: "Open",
-  },
-  {
-    id: "1003",
-    name: "Alex Kim",
-    initials: "AK",
-    time: "11:52 AM",
-    preview: "Order was great, just a quick question about…",
-    status: "Closed",
-  },
-  {
-    id: "1004",
-    name: "Sara Tanaka",
-    initials: "ST",
-    time: "10:08 AM",
-    preview: "Wrong size delivered, expected large",
-    status: "Open",
-  },
-]
 ---
 
 <div class="px-5 py-2 border-b border-black/5 shrink-0">
@@ -43,47 +8,85 @@ const MOCK_TICKETS = [
   </span>
 </div>
 
-<div class="flex-1 overflow-y-auto">
-  {
-    MOCK_TICKETS.map((t) => {
-      const isSelected = currentPath === `/admin/chats/${t.id}`
-      return (
-      <a
-        href={`/admin/chats/${t.id}`}
-        class:list={[
-          "block w-full px-4 py-3 border-b border-black/5 border-l-4 transition-colors",
-          isSelected
-            ? "bg-amber-50 border-l-amber-700"
-            : "bg-white border-l-transparent hover:bg-gray-50",
-        ]}
-      >
-        <div class="flex items-start gap-3">
-          <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-amber-700">
-            <span class="font-inter text-xs font-bold text-white">{t.initials}</span>
-          </div>
+<div id="ticket-list" class="flex-1 overflow-y-auto"></div>
 
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center justify-between">
-              <span class="font-inter text-sm font-semibold truncate">{t.name}</span>
-              <span class="font-inter text-[10px] text-gray-400 ml-2 shrink-0">{t.time}</span>
-            </div>
-            <div class="flex items-center justify-between gap-2">
-              <p class="font-inter text-xs text-gray-500 truncate leading-snug">{t.preview}</p>
-              <span
-                class:list={[
-                  "font-inter text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0",
-                  t.status === "Open"
-                    ? "bg-emerald-50 text-emerald-600"
-                    : "bg-gray-100 text-gray-400",
-                ]}
-              >
-                {t.status}
-              </span>
-            </div>
+<script>
+  import { io } from "socket.io-client"
+
+  const API = import.meta.env.PUBLIC_API_URL ?? "http://localhost:3000/api"
+  const SOCKET_URL = import.meta.env.PUBLIC_SOCKET_URL ?? "http://localhost:3000"
+
+  const list = document.getElementById("ticket-list") as HTMLDivElement
+  const currentPath = window.location.pathname
+
+  function renderTicket(t: any) {
+    const name = `${t.firstName} ${t.lastName}`
+    const lastMsg = t.messages.at(-1)
+    const preview = lastMsg?.text ?? "No messages yet"
+    const time = lastMsg?.time ?? ""
+    const isSelected = currentPath === `/admin/chats/${t.id}`
+    const isOpen = t.status === "open"
+
+    const a = document.createElement("a")
+    a.href = `/admin/chats/${t.id}`
+    a.id = `ticket-${t.id}`
+    a.className = [
+      "block w-full px-4 py-3 border-b border-black/5 border-l-4 transition-colors",
+      isSelected ? "bg-amber-50 border-l-amber-700" : "bg-white border-l-transparent hover:bg-gray-50",
+    ].join(" ")
+    a.dataset.status = t.status
+
+    a.innerHTML = `
+      <div class="flex items-start gap-3">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-amber-700">
+          <span class="font-inter text-xs font-bold text-white">${t.initials}</span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between">
+            <span class="font-inter text-sm font-semibold truncate">${name}</span>
+            <span class="ticket-time font-inter text-[10px] text-gray-400 ml-2 shrink-0">${time}</span>
+          </div>
+          <div class="flex items-center justify-between gap-2">
+            <p class="ticket-preview font-inter text-xs text-gray-500 truncate leading-snug">${preview}</p>
+            <span class="ticket-badge font-inter text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${isOpen ? "bg-emerald-50 text-emerald-600" : "bg-gray-100 text-gray-400"}">
+              ${isOpen ? "Open" : "Closed"}
+            </span>
           </div>
         </div>
-      </a>
-      )
-    })
+      </div>
+    `
+    return a
   }
-</div>
+
+  const res = await fetch(`${API}/chats`, { credentials: "include" })
+  if (res.ok) {
+    const chats = await res.json()
+    chats.forEach((t: any) => list.appendChild(renderTicket(t)))
+  }
+
+  const socket = io(SOCKET_URL, { withCredentials: true })
+  socket.emit("admin:join")
+
+  socket.on("chat:new", (chat: any) => {
+    list.prepend(renderTicket(chat))
+  })
+
+  socket.on("message:new", ({ chatId, message }: any) => {
+    const el = document.getElementById(`ticket-${chatId}`)
+    if (!el) return
+    const preview = el.querySelector(".ticket-preview")
+    const time = el.querySelector(".ticket-time")
+    if (preview) preview.textContent = message.text
+    if (time) time.textContent = message.time
+  })
+
+  socket.on("chat:closed", ({ chatId }: any) => {
+    const el = document.getElementById(`ticket-${chatId}`)
+    if (!el) return
+    const badge = el.querySelector(".ticket-badge")
+    if (badge) {
+      badge.className = "ticket-badge font-inter text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 bg-gray-100 text-gray-400"
+      badge.textContent = "Closed"
+    }
+  })
+</script>

@@ -9,6 +9,7 @@
     "preview": "astro preview"
   },
   "dependencies": {
+    "@astrojs/node": "^8.3.4",
     "@lucide/astro": "^1.20.0",
     "@nanostores/solid": "^1.1.1",
     "@tailwindcss/vite": "^4.3.1",
@@ -19,5 +20,9 @@
   },
   "devDependencies": {
     "dotenv-cli": "^11.0.0"
+  },
+  "allowScripts": {
+    "esbuild@0.21.5": true,
+    "sharp@0.33.5": true
   }
 }

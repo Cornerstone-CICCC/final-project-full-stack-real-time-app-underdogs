@@ -4,20 +4,22 @@ import AdminMainHeader from "@components/admin/AdminMainHeader.astro"
 import AdminMainContents from "@components/admin/AdminMainContents.astro"
 import AdminMainFooter from "@components/admin/AdminMainFooter.astro"
 
-export function getStaticPaths() {
-  return [
-    { params: { id: "1001" } },
-    { params: { id: "1002" } },
-    { params: { id: "1003" } },
-    { params: { id: "1004" } },
-  ]
-}
-
 const { id } = Astro.params
 ---
 
 <AdminBaseLayout title={`Chat ${id}`}>
-  <AdminMainHeader />
-  <AdminMainContents />
-  <AdminMainFooter />
+  <div id="chat-root" data-chat-id={id} class="flex flex-col flex-1 overflow-hidden">
+    <AdminMainHeader />
+    <AdminMainContents />
+    <AdminMainFooter />
+  </div>
 </AdminBaseLayout>
+
+<script>
+  const API = import.meta.env.PUBLIC_API_URL ?? "http://localhost:3000/api"
+
+  const res = await fetch(`${API}/auth/me`, { credentials: "include" })
+  if (!res.ok) {
+    window.location.href = "/admin/login"
+  }
+</script>
