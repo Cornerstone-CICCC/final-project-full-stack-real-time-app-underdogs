@@ -2,7 +2,26 @@ openapi: 3.0.3
 info:
   title: Stupid & Slow Pizza — Support Chat API
   version: 1.0.0
-  description: Customer support chat API for Stupid & Slow Pizza
+  description: |
+    Customer support chat API for Stupid & Slow Pizza.
+
+    ## Real-time messaging (WebSocket)
+
+    Messages are exchanged over Socket.IO, not REST. Connect to `http://localhost:3000`.
+
+    | Event (emit) | Payload | Description |
+    |---|---|---|
+    | `visitor:join` | `{ chatId }` | Visitor joins their chat room |
+    | `admin:join` | _(none)_ | Admin joins the broadcast room |
+    | `send_message` | `{ chatId, from, text }` | Send a message |
+
+    | Event (listen) | Payload | Description |
+    |---|---|---|
+    | `new_message` | `{ chatId, message }` | New message received |
+    | `chat:new` | `Chat` | New ticket opened (admin only) |
+    | `chat_closed` | `{ chatId }` | Ticket was closed (visitor) |
+    | `chat:closed` | `{ chatId }` | Ticket was closed (admin) |
+    | `error` | `{ message }` | Socket error |
 
 servers:
   - url: http://localhost:4010
@@ -39,7 +58,6 @@ components:
       properties:
         from:
           type: string
-          enum: [visitor, admin]
           example: "visitor"
         text:
           type: string
@@ -53,14 +71,14 @@ components:
       properties:
         id:
           type: string
-          example: "abc123"
-        visitorFirstName:
+          example: "1001"
+        firstName:
           type: string
           example: "Sarah"
-        visitorLastName:
+        lastName:
           type: string
           example: "Miller"
-        visitorInitials:
+        initials:
           type: string
           example: "SM"
         status:
@@ -76,37 +94,10 @@ components:
           items:
             $ref: "#/components/schemas/Message"
 
-    ChatSummary:
-      type: object
-      properties:
-        id:
-          type: string
-          example: "abc123"
-        visitorFirstName:
-          type: string
-          example: "Sarah"
-        visitorLastName:
-          type: string
-          example: "Miller"
-        visitorInitials:
-          type: string
-          example: "SM"
-        status:
-          type: string
-          enum: [open, closed]
-          example: "open"
-        createdAt:
-          type: string
-          format: date-time
-          example: "2026-06-12T14:00:00Z"
-        latestMessage:
-          type: string
-          example: "My pizza is 3 hours late!"
-
     Error:
       type: object
       properties:
-        message:
+        error:
           type: string
           example: "Unauthorized"
 
@@ -140,12 +131,15 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  admin:
-                    $ref: "#/components/schemas/Admin"
+                $ref: "#/components/schemas/Admin"
+        "400":
+          description: Missing email or password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "401":
-          description: Invalid email or password
+          description: Invalid credentials
           content:
             application/json:
               schema:
@@ -155,8 +149,6 @@ paths:
     post:
       tags: [Auth]
       summary: Log out and destroy session
-      security:
-        - cookieAuth: []
       responses:
         "200":
           description: Logged out successfully
@@ -167,13 +159,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: "Logged out successfully"
-        "401":
-          description: Not authenticated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+                    example: "Logged out"
 
   /api/auth/me:
     get:
@@ -209,11 +195,8 @@ paths:
           application/json:
             schema:
               type: object
-              required: [visitorId, firstName, lastName]
+              required: [firstName, lastName]
               properties:
-                visitorId:
-                  type: string
-                  example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
                 firstName:
                   type: string
                   example: "Sarah"
@@ -222,15 +205,17 @@ paths:
                   example: "Miller"
       responses:
         "201":
-          description: Chat session created, returns the new chat ID
+          description: Chat session created, returns the new chat object
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  chatId:
-                    type: string
-                    example: "abc123"
+                $ref: "#/components/schemas/Chat"
+        "400":
+          description: Missing firstName or lastName
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
     get:
       tags: [Chats]
@@ -239,13 +224,13 @@ paths:
         - cookieAuth: []
       responses:
         "200":
-          description: List of all chats (open and closed)
+          description: List of all chats with full message history
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/ChatSummary"
+                  $ref: "#/components/schemas/Chat"
         "401":
           description: Not authenticated
           content:
@@ -265,7 +250,7 @@ paths:
           required: true
           schema:
             type: string
-          example: "abc123"
+          example: "1001"
       responses:
         "200":
           description: Chat with full message history
@@ -286,46 +271,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  /api/chats/{id}/messages:
-    post:
-      tags: [Chats]
-      summary: Send a message in a chat (visitor or admin)
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-          example: "abc123"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [from, text]
-              properties:
-                from:
-                  type: string
-                  enum: [visitor, admin]
-                  example: "visitor"
-                text:
-                  type: string
-                  example: "My pizza is 3 hours late!"
-      responses:
-        "201":
-          description: Message sent
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Message"
-        "404":
-          description: Chat not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
   /api/chats/{id}/close:
     patch:
       tags: [Chats]
@@ -338,24 +283,14 @@ paths:
           required: true
           schema:
             type: string
-          example: "abc123"
+          example: "1001"
       responses:
         "200":
-          description: Ticket closed successfully
+          description: Ticket closed, returns the updated chat object
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Ticket closed"
-                  id:
-                    type: string
-                    example: "abc123"
-                  status:
-                    type: string
-                    example: "closed"
+                $ref: "#/components/schemas/Chat"
         "401":
           description: Not authenticated
           content:
