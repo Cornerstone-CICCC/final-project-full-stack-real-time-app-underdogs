@@ -1,7 +1,7 @@
 import { defineConfig } from "astro/config"
 import tailwindcss from "@tailwindcss/vite"
 import { fileURLToPath } from "url"
-import node from "@astrojs/node"
+import netlify from "@astrojs/netlify"
 
 const src = fileURLToPath(new URL("./src", import.meta.url))
 
@@ -20,5 +20,5 @@ export default defineConfig({
     },
   },
   output: "server",
-  adapter: node({ mode: "standalone" }),
+  adapter: netlify(),
 })
