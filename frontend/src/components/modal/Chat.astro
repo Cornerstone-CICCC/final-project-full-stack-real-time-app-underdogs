@@ -17,7 +17,7 @@ import Icon from "@components/common/Icon.astro"
         <p class="font-inter text-sm font-semibold text-white leading-none">Support Agent</p>
         <p id="connection-status" class="font-inter text-xs text-orange-200 mt-0.5 flex items-center gap-1.5">
           <span class="w-1.5 h-1.5 rounded-full bg-green-300 inline-block"></span>
-          Agent connected
+          Ticket opened
         </p>
       </div>
     </div>
@@ -108,7 +108,7 @@ import Icon from "@components/common/Icon.astro"
     sendBtn.disabled = true
     connectionStatus.innerHTML = `
       <span class="w-1.5 h-1.5 rounded-full bg-red-400 inline-block"></span>
-      Chat closed
+      Ticket closed
     `
   })
 
