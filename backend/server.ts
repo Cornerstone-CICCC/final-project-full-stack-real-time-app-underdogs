@@ -27,15 +27,25 @@ const corsOptions: CorsOptions = {
   credentials: true,
 }
 
+// Required for secure cookies behind Render's proxy
+app.set("trust proxy", 1)
+
 app.use(cors(corsOptions))
 app.use(express.json())
 app.use(cookieParser())
+
+const isProd = process.env.NODE_ENV === "production"
 app.use(
   session({
     secret: process.env.SESSION_SECRET ?? "dev_secret",
     resave: false,
     saveUninitialized: false,
-    cookie: { httpOnly: true, maxAge: 1000 * 60 * 60 * 24 },
+    cookie: {
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24,
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
+    },
   })
 )
 
