@@ -1,3 +1,6 @@
+## Link for Live Demo:
+https://stupid-slow-pizza.netlify.app/
+
 ## Getting Started
 
 ### Initial Setup (first time only)
@@ -29,11 +32,6 @@ npm run dev
 # Without backend — uses Prism mock server instead
 npm run dev:mock
 ```
-
-| Command | Frontend | Backend | Mock server | Swagger UI |
-|---|---|---|---|---|
-| `npm run dev` | ✅ | ✅ | — | ✅ |
-| `npm run dev:mock` | ✅ | — | ✅ | ✅ |
 
 ---
 
